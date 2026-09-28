@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QStackedWidget, QHBoxLayout, QLineEdit, QMessageBox, QFileDialog
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QThreadPool
 
+from GitRecover.workers.worker_thread import Worker
 from GitRecover.ai.ollama_utils import provide_feedback
 
 from pathlib import Path
@@ -10,6 +11,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Git Recovery Assistant")
         self.setFixedSize(QSize(480, 360))
+
+        self.thread_pool = QThreadPool()
 
         self.app_pages = QStackedWidget()
 
@@ -68,11 +71,14 @@ class MainWindow(QMainWindow):
             file_label.setText(directory)
 
     def _handle_git_recover(self, user_message: str):
-        ai_response = provide_feedback(user_message)
+        worker = Worker(provide_feedback, user_message)
+        worker.signals.result.connect(self.show_result)
+        self.thread_pool.start(worker)
 
+    def show_result(self, result):
         dialog_response = QMessageBox(self)
         dialog_response.setWindowTitle("AI Response")
-        dialog_response.setText(ai_response)
+        dialog_response.setText(result)
 
         ok_btn = dialog_response.exec()
         # if ok_btn == QMessageBox.Ok:
