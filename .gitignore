@@ -31,3 +31,6 @@ dist/
 
 # Logs
 *.log
+
+# Test Scenarios
+/tests/scenarios/*/
