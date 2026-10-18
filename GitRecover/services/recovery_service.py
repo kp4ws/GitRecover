@@ -28,38 +28,46 @@ git fsck --full
 NOTE: For commands, such as git reflog, that work on readable files, I'll be creating custom implementations of them
 For other binary files (pack files, etc) I'll be using plumbing commands (git fsck, git cat-file, etc) under the hood and extracting data from them
 """
-from GitRecover.ai.ollama_provider import provide_feedback
-import GitRecover.utils as utils
-from GitRecover.git.recovery_request import RecoveryRequest, RepositoryState, GitHistory
+import GitRecover.ai.llm_providerOLD as ai
+import GitRecover.git.extractor as extractor
+from GitRecover.models.schemas import RecoveryRequest, RepositoryState, GitHistory
 
-#TODO Determine if a class is needed or not (currently its not storing any state)
-class RecoveryService():
+class RecoveryService:
     def __init__(self):
+        #TODO: Keep a list of historic records of the AI responses
+        #TODO: Keep handle to current AI response (should this be displayed in console page?)
         pass
 
-    def _create_recovery_request(self, git_repo: str, user_prompt: str) -> RecoveryRequest:
-        repo_structure: str = utils.run_cmd("git repo structure --format=lines", git_repo)
-        local_commits: str = utils.run_cmd("git cherry -v", git_repo)
-        git_refs: str = utils.run_cmd("git for-each-ref", git_repo)
-        git_staging: str = utils.run_cmd("git ls-files -s", git_repo)
-        modified_files: str = utils.run_cmd("git ls-files -s", git_repo)
-        head: str = utils.run_cmd("git rev-parse HEAD", git_repo)
-        fsck_checks: str = utils.run_cmd("git fsck --full --strict --unreachable --dangling --lost-found --verbose", git_repo)
+    def _create_request_payload(self, git_repo: str, user_prompt: str) -> RecoveryRequest:
 
-        payload = RecoveryRequest(
-            repository_state=RepositoryState(
-                head="",
-                refs=""
-            ),
-            git_history=GitHistory(
-                local_commits=[""]
-            ),
+        current_head: str = extractor.get_current_head(git_repo)
+        staged: str = extractor.get_staging_area(git_repo)
+        local_commits: str = extractor.get_local_commits(git_repo)
+
+        repository_state = RepositoryState(
+            head=current_head,
+            refs=""
+        )
+
+        git_history = GitHistory(
+            local_commits=local_commits.splitlines()
+        )
+
+        request = RecoveryRequest(
+            repository_state=repository_state,
+            git_history=git_history,
             user_prompt=user_prompt
         )
 
-        return payload
+        json_payload: dict[str, object] = request.to_payload()
+        return json_payload
+
+    #TODO
+    def _filter_ai_feedback(self, feedback: str):
+         pass
+
 
     def handle_recovery(self, git_repo: str, user_prompt: str):
-        recovery_request = self._create_recovery_request(git_repo, user_prompt)
-        ai_feedback = provide_feedback(recovery_request.to_payload())
-        return ai_feedback
+            recovery_request_payload = self._create_request_payload(git_repo, user_prompt)
+            ai_feedback = ai.provide_feedback(recovery_request_payload)
+            return ai_feedback

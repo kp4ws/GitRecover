@@ -3,6 +3,8 @@ from ollama import chat
 
 #TODO: Determine if llama.cpp is better to use than ollama
 
+#TODO Currently has server startup issue. Need to poll Ollama API prior to user request to see if its running and start it if not
+
 def provide_feedback(user_payload_json: dict) -> str:
     payload_str = json.dumps(user_payload_json)
     messages = [

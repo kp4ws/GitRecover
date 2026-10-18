@@ -18,10 +18,6 @@ class RecoveryRequest:
     def to_payload(self) -> dict[str, object]:
         return asdict(self)
 
-class RepoJsonObject():
-    def __init__(self, *args):
-        self._create_json(args)
-
 # "repository_state": {
 #     "structure": repo_structure.splitlines(),
 #     "current_branch": "",
