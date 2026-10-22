@@ -54,7 +54,7 @@ The general program pipeline follows these steps:
 6. Once LLM response is complete, it's transmitted back, filtered, and presented to the user.
 7. Using the sequence of steps, the user can attempt to fix their problem or continue prompting the system for more help.
 
-## Program Inputs & Outputs
+## Program I/O
 ### Inputs:
 - Git repo file path.
 - User prompt.
