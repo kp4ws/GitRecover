@@ -1,3 +1,5 @@
+#TODO: Should config.toml be in package directory or root directory?
+
 import tomllib
 from pathlib import Path
 
