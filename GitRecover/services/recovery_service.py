@@ -28,17 +28,15 @@ git fsck --full
 NOTE: For commands, such as git reflog, that work on readable files, I'll be creating custom implementations of them
 For other binary files (pack files, etc) I'll be using plumbing commands (git fsck, git cat-file, etc) under the hood and extracting data from them
 """
-import GitRecover.ai.llm_providerOLD as ai
 import GitRecover.git.extractor as extractor
-from GitRecover.models.schemas import RecoveryRequest, RepositoryState, GitHistory
+from GitRecover.ai.llm_provider import LLMProvider
+from GitRecover.git.schemas import RecoveryRequest, RepositoryState, GitHistory
 
 class RecoveryService:
     def __init__(self):
-        #TODO: Keep a list of historic records of the AI responses
-        #TODO: Keep handle to current AI response (should this be displayed in console page?)
-        pass
+        self.llm_provider = LLMProvider()
 
-    def _create_request_payload(self, git_repo: str, user_prompt: str) -> RecoveryRequest:
+    def _create_request_payload(self, git_repo: str, user_prompt: str) -> dict[str, object]:
 
         current_head: str = extractor.get_current_head(git_repo)
         staged: str = extractor.get_staging_area(git_repo)
@@ -62,12 +60,7 @@ class RecoveryService:
         json_payload: dict[str, object] = request.to_payload()
         return json_payload
 
-    #TODO
-    def _filter_ai_feedback(self, feedback: str):
-         pass
-
-
     def handle_recovery(self, git_repo: str, user_prompt: str):
-            recovery_request_payload = self._create_request_payload(git_repo, user_prompt)
-            ai_feedback = ai.provide_feedback(recovery_request_payload)
+            payload = self._create_request_payload(git_repo, user_prompt)
+            ai_feedback = self.llm_provider.generate_response(payload)
             return ai_feedback

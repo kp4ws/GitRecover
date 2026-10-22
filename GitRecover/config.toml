@@ -1,0 +1,4 @@
+[llm]
+model_path = "models/Qwen3-4B-Q4_K_M.gguf"
+n_ctx = 4096
+n_threads = 4
