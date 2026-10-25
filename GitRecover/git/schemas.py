@@ -15,6 +15,7 @@ class RecoveryRequest:
     repository_state: RepositoryState
     git_history: GitHistory
     user_prompt: str
+    repo_path: str
 
     def to_payload(self) -> dict[str, object]:
         return asdict(self)

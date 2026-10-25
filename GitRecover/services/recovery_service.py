@@ -36,11 +36,11 @@ class RecoveryService:
     def __init__(self):
         self.llm_provider = LLMProvider()
 
-    def _create_request_payload(self, git_repo: str, user_prompt: str) -> dict[str, object]:
+    def _create_request_payload(self, repo_path: str, user_prompt: str) -> dict[str, object]:
 
-        current_head: str = extractor.get_current_head(git_repo)
-        staged: str = extractor.get_staging_area(git_repo)
-        local_commits: str = extractor.get_local_commits(git_repo)
+        current_head: str = extractor.get_current_head(repo_path)
+        staged: str = extractor.get_staging_area(repo_path)
+        local_commits: str = extractor.get_local_commits(repo_path)
 
         repository_state = RepositoryState(
             head=current_head,
@@ -54,13 +54,14 @@ class RecoveryService:
         request = RecoveryRequest(
             repository_state=repository_state,
             git_history=git_history,
-            user_prompt=user_prompt
+            user_prompt=user_prompt,
+            repo_path=repo_path
         )
 
         json_payload: dict[str, object] = request.to_payload()
         return json_payload
 
-    def handle_recovery(self, git_repo: str, user_prompt: str):
-            payload = self._create_request_payload(git_repo, user_prompt)
+    def handle_recovery(self, repo_path: str, user_prompt: str):
+            payload = self._create_request_payload(repo_path, user_prompt)
             ai_feedback = self.llm_provider.generate_response(payload)
             return ai_feedback

@@ -22,19 +22,17 @@ class ConsolePage(Page):
         layout = QVBoxLayout()
 
         browse_layout = QHBoxLayout()
-        git_repo_label = QLabel("Selected repository:")
-        git_repo_label.setStyleSheet("font-weight: bold;")
 
         #By default, set git repo to current directory
         cwd = Path.cwd()
-        git_repo_file = QLabel(f"{cwd}")
-        git_repo_file.setStyleSheet("color: gray; font-style: italic;")
+        repo_filepath_label = QLabel(f"{cwd}")
+        repo_filepath_label.setStyleSheet("color: gray; font-style: italic;")
 
         repo_browse_btn = QPushButton("Browse Git Repo")
-        repo_browse_btn.clicked.connect(lambda: self._handle_browse(git_repo_file))
+        repo_browse_btn.clicked.connect(lambda: self._handle_browse(repo_filepath_label))
 
-        # browse_layout.addWidget(git_repo_label)
-        browse_layout.addWidget(git_repo_file)
+        # browse_layout.addWidget(repo_path_label)
+        browse_layout.addWidget(repo_filepath_label)
         browse_layout.addWidget(repo_browse_btn)
         browse_layout.addStretch()
 
@@ -43,7 +41,7 @@ class ConsolePage(Page):
         prompt_field.setStyleSheet("color: lightgrey;")
 
         git_recover_btn = QPushButton("Submit Recovery Request")
-        git_recover_btn.clicked.connect(lambda: self._handle_git_recover(git_repo_file.text(), prompt_field.text()))
+        git_recover_btn.clicked.connect(lambda: self._handle_git_recover(repo_filepath_label.text(), prompt_field.text()))
 
         layout.addLayout(browse_layout)
         layout.addWidget(prompt_field)
@@ -52,8 +50,8 @@ class ConsolePage(Page):
 
         return layout
 
-    def _handle_git_recover(self, git_repo: str, user_prompt: str):
-        worker = Worker(self.recovery_engine.handle_recovery, git_repo, user_prompt)
+    def _handle_git_recover(self, repo_path: str, user_prompt: str):
+        worker = Worker(self.recovery_engine.handle_recovery, repo_path, user_prompt)
         worker.signals.result.connect(self.show_result)
         QThreadPool.globalInstance().start(worker)
 
