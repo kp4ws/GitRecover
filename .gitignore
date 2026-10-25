@@ -34,3 +34,6 @@ dist/
 
 # Test Scenarios
 /tests/scenarios/*/
+
+# Local LLM Models
+*.gguf
