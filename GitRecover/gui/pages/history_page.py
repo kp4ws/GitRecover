@@ -10,13 +10,24 @@ if TYPE_CHECKING:
     from GitRecover.services.recovery_service import RecoveryService
 
 class HistoryPage(Page):
-    def __init__(self, root: MainWindow, recovery_engine: RecoveryService):
-        super().__init__(root, recovery_engine)
+    def __init__(self, root: MainWindow, recovery_service: RecoveryService):
+        super().__init__(root, recovery_service)
         self.main_layout = self._create_widgets()
         self.setLayout(self.main_layout)
 
+    def refresh_UI(self):
+        pass
+
     def _create_widgets(self) -> QVBoxLayout:
         main_layout = QVBoxLayout()
-        main_layout.addWidget(QLabel("History Page: Keeps a list of response history"))
+
+        page_title = QLabel("History")
+        page_title.setStyleSheet("font-size: 26px; font-weight: bold;")
+        page_subtitle = QLabel("Displays diagram of git commit history")
+        page_subtitle.setStyleSheet("color: gray; margin-bottom: 10px;")
+
+        main_layout.addWidget(page_title)
+        main_layout.addWidget(page_subtitle)
+        main_layout.addStretch()
 
         return main_layout

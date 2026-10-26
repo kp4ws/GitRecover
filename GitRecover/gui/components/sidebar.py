@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QStackedWidget, QFrame, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QLabel
+from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import Signal
 
 class Sidebar(QFrame):

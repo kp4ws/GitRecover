@@ -30,14 +30,14 @@ For other binary files (pack files, etc) I'll be using plumbing commands (git fs
 """
 import GitRecover.git.extractor as extractor
 from GitRecover.ai.llm_provider import LLMProvider
-from GitRecover.git.schemas import RecoveryRequest, RepositoryState, GitHistory
+from GitRecover.services.schemas import RecoveryRequest, RepositoryState, GitHistory
 
 class RecoveryService:
-    def __init__(self):
-        self.llm_provider = LLMProvider()
-
-    def _create_request_payload(self, repo_path: str, user_prompt: str) -> dict[str, object]:
-
+    def __init__(self, llm_provider):
+        self.llm_provider: LLMProvider = llm_provider
+        self.active_session: RecoveryRequest | None = None
+    
+    def _create_active_session(self, repo_path: str, user_prompt: str) -> RecoveryRequest:
         current_head: str = extractor.get_current_head(repo_path)
         staged: str = extractor.get_staging_area(repo_path)
         local_commits: str = extractor.get_local_commits(repo_path)
@@ -48,20 +48,42 @@ class RecoveryService:
         )
 
         git_history = GitHistory(
-            local_commits=local_commits.splitlines()
+            local_commits=local_commits.splitlines(),
+            staged=staged
         )
 
         request = RecoveryRequest(
             repository_state=repository_state,
             git_history=git_history,
             user_prompt=user_prompt,
-            repo_path=repo_path
+            repo_path=repo_path,
+            chat_history=["tes"]
         )
 
-        json_payload: dict[str, object] = request.to_payload()
-        return json_payload
+        return request
 
-    def handle_recovery(self, repo_path: str, user_prompt: str):
-            payload = self._create_request_payload(repo_path, user_prompt)
-            ai_feedback = self.llm_provider.generate_response(payload)
-            return ai_feedback
+    def create_recovery_request(self, repo_path: str, user_prompt: str):
+        self.active_session = self._create_active_session(repo_path, user_prompt)
+        # self.save_recovery_request()
+        # payload = self._create_request_payload(repo_path, user_prompt)
+        # ai_feedback = self.llm_provider.generate_response(payload)
+        # return ai_feedback
+
+    def import_recovery_request(self, repo_path):
+        self.active_session.load_from_disk(repo_path)
+
+    def save_recovery_request(self, recovery_request: RecoveryRequest):
+        with open ("", "w") as f:
+            pass
+
+    def handle_chat_message(self, user_message: str):
+        if not self.active_session:
+            print("No active session")
+            return 
+
+        chat_history = self.active_session.chat_history
+        chat_history.append({"role": "user", "content": user_message})
+        ai_response = self.llm_provider.generate_response(chat_history)
+        chat_history.append({"role": "assistant", "content": ai_response})
+
+        return ai_response

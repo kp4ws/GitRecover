@@ -24,8 +24,7 @@ def setup_scenario():
     )
 
     print("Accidental hard reset...")
-    # run_scenario_cmd("git reset --hard HEAD~1")
-    print(run_scenario_cmd("git", "status"))
+    run_scenario_cmd("git", "reset", "--hard", "HEAD~1")
 
     print(f"Lost commit: {lost_commit}")
     print_scenario_report("Hard Reset")
