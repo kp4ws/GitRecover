@@ -58,7 +58,7 @@ class HomePage(Page):
         prompt_field.setPlaceholderText("")
         prompt_field.setStyleSheet("color: lightgrey;")
 
-        new_recovery_btn = QPushButton("Submit Recovery Request")
+        new_recovery_btn = QPushButton("Create Recovery Request")
         new_recovery_btn.setFixedWidth(220)
         new_recovery_btn.clicked.connect(lambda: self._handle_recovery_create(repo_file.text(), prompt_field.text()))
 
@@ -67,14 +67,14 @@ class HomePage(Page):
             items = [
                 repo_label,
                 repo_file_layout,
-                prompt_label,
-                prompt_field,
+                # prompt_label,
+                # prompt_field,
                 new_recovery_btn
             ]
         )
 
         #IMPORT EXISTING REQUEST CARD
-        self.existing_recovery_btn = QPushButton("Import From File")
+        self.existing_recovery_btn = QPushButton("Import Recovery Request")
         self.existing_recovery_btn.setFixedWidth(220)
         self.existing_recovery_btn.clicked.connect(self._handle_recovery_import)
 

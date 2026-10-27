@@ -8,7 +8,7 @@ SCENARIO_DIR = Path(__file__).resolve().parent
 REPO_DIR = SCENARIO_DIR / "dummy_repo"
 
 def run_scenario_cmd(*args: str) -> str:
-    return run_cmd(*args, repo_path=str(REPO_DIR))
+    return run_cmd(*args, cwd=str(REPO_DIR))
 
 #Helper function to unlock .git readonly files
 def unlock_file(action, path, exc_info):
