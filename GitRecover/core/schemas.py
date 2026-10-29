@@ -2,9 +2,20 @@ from dataclasses import dataclass, asdict
 import json
 
 @dataclass
+class GitCommit:
+    hash: str
+    message: str
+    date: str
+    author: str
+
+@dataclass
 class RepositoryState:
     head: str
     refs: list[str]
+    status: str #TODO This should be changed to enum
+    current_head: str
+    current_branch: str
+    is_dirty: bool
 
 @dataclass
 class GitHistory:

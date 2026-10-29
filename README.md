@@ -81,3 +81,6 @@ To use a different model:
 ## Troubleshooting & Known Issues
 - **Missing Model:** The application will fail to generate responses if a valid .gguf model is not supplied in the designated models directory.
 - **Inference Delay:** Because the AI runs entirely locally on CPU/RAM, generating a response may take some time.
+
+## Stretch Goals / Ideas
+- Helper utility to help with git cherrypicking

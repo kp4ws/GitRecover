@@ -19,15 +19,15 @@ class HistoryPage(Page):
         pass
 
     def _create_widgets(self) -> QVBoxLayout:
-        main_layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         page_title = QLabel("History")
         page_title.setStyleSheet("font-size: 26px; font-weight: bold;")
         page_subtitle = QLabel("Displays diagram of git commit history")
         page_subtitle.setStyleSheet("color: gray; margin-bottom: 10px;")
 
-        main_layout.addWidget(page_title)
-        main_layout.addWidget(page_subtitle)
-        main_layout.addStretch()
+        layout.addWidget(page_title)
+        layout.addWidget(page_subtitle)
+        layout.addStretch()
 
-        return main_layout
+        return layout

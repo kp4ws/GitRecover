@@ -57,9 +57,12 @@ class LLMProvider:
         messages.extend(chat_history)
         
         #Generate response
+        #TODO Determine if params should be added/changed to speed up model response time
         response = self.model.create_chat_completion(
             messages=messages,
             temperature=0.2,
+            max_tokens=150,
+            frequency_penalty=1.2,
         )
 
         unfiltered_response = response["choices"][0]["message"]["content"] or ""

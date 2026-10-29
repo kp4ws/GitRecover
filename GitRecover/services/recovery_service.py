@@ -30,7 +30,7 @@ For other binary files (pack files, etc) I'll be using plumbing commands (git fs
 """
 import GitRecover.git.extractor as extractor
 from GitRecover.ai.llm_provider import LLMProvider
-from GitRecover.services.schemas import RecoveryRequest, RepositoryState, GitHistory
+from GitRecover.core.schemas import RecoveryRequest, RepositoryState, GitHistory
 
 class RecoveryService:
     def __init__(self, llm_provider):
@@ -44,7 +44,11 @@ class RecoveryService:
 
         repository_state = RepositoryState(
             head=current_head,
-            refs=""
+            refs="",
+            status="Clean",
+            current_head=current_head,
+            current_branch="Main",
+            is_dirty=False
         )
 
         git_history = GitHistory(
@@ -57,12 +61,12 @@ class RecoveryService:
             git_history=git_history,
             user_prompt=user_prompt,
             repo_path=repo_path,
-            chat_history=["tes"]
+            chat_history=[]
         )
 
         return request
 
-    def create_recovery_request(self, repo_path: str, user_prompt: str):
+    def create_recovery_request(self, repo_path: str, user_prompt: str=""):
         self.active_session = self._create_active_session(repo_path, user_prompt)
         # self.save_recovery_request()
         # payload = self._create_request_payload(repo_path, user_prompt)
@@ -86,4 +90,5 @@ class RecoveryService:
         ai_response = self.llm_provider.generate_response(chat_history)
         chat_history.append({"role": "assistant", "content": ai_response})
 
+        #TODO create filtering mechanism where if AI response certainty is low, system forces it to retry up to N times
         return ai_response
