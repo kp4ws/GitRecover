@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget, QFileDialog, QLabel
+from PySide6.QtCore import QThreadPool
+from GitRecover.workers.worker_thread import Worker
+from GitRecover.gui.components.progress_dialog import ProgressDialog
 
 if TYPE_CHECKING:
     from GitRecover.gui.window import MainWindow
@@ -39,6 +42,27 @@ class Page(QWidget):
         if file_path:
             return file_path
         return None
+
+    def perform_background_task(self, fn, on_success=None, on_error=None, title="Processing...", text="", *args, **kwargs):
+        progress_dialog = ProgressDialog(title=title, text=text, parent=self)
+        progress_dialog.show()
+
+        worker = Worker(fn, *args, **kwargs)
+        worker.signals.progress.connect(progress_dialog.update_progress)
+
+        if on_success:
+            worker.signals.result.connect(on_success)
+
+        if on_error:
+            worker.signals.error.connect(on_error)
+
+        def cleanup():
+            progress_dialog.close()
+            progress_dialog.deleteLater()
+
+        worker.signals.finished.connect(cleanup)
+        
+        QThreadPool.globalInstance().start(worker)
 
     @abstractmethod
     def refresh_UI(self):

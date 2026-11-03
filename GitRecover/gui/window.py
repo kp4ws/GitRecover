@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         self.navigation_items = [
             ("Home", 0),
             ("History", 1),
-            ("Status", 2),
+            # ("Status", 2), #Leaving Status Page out of application for now
         ]
 
         self.main_widget = self._create_main_widget(recovery_service)

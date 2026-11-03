@@ -16,8 +16,10 @@ class Worker(QRunnable):
 
     @Slot()
     def run(self):
+        def report_progress(value: int, message: str = ""):
+            self.signals.progress.emit(value, message)
         try:
-            result = self.fn(*self.args, **self.kwargs)
+            result = self.fn(*self.args, **self.kwargs, progress_callback=report_progress)
         except Exception:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]

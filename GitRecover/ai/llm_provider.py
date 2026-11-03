@@ -8,7 +8,7 @@ class LLMProvider:
         '''Only load model on first use, not in constructor'''
         self.model = None
 
-    def _load_model(self):
+    def load_model(self):
         try:
             self.model = Llama(
                 model_path=llm.get("model_path"),
@@ -23,7 +23,7 @@ class LLMProvider:
     def generate_response(self, chat_history: list[dict], payload: dict = None) -> str:
         if self.model is None:
             '''This will be true on first use, where model is first loaded'''
-            self._load_model()
+            self.load_model()
 
         #System Prompt
         messages = [
