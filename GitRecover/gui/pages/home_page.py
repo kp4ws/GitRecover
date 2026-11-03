@@ -3,9 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QHBoxLayout, QLineEdit, QMessageBox
-from PySide6.QtCore import QThreadPool
 from pathlib import Path
-from GitRecover.workers.worker_thread import Worker
 from GitRecover.gui.pages.page import Page
 from GitRecover.gui.components.card import Card
 from datetime import datetime
@@ -23,17 +21,22 @@ class HomePage(Page):
     def refresh_UI(self):
         if self.recovery_service.active_session is None:
             self.active_session_label.setText("No active session")
-            self.save_recovery_btn.setEnabled(False)
         else:
+            self.active_request_card.show()
             self.active_session_label.setText(f"Active Session: {datetime.now()}")
-            self.save_recovery_btn.setEnabled(True)
+
+            state = self.recovery_service.active_session.repository_state
+
+            self.repo_status.setText(f"Repository Status: {state.status}") 
+            self.repo_head.setText(f"Current HEAD: {state.current_head[:7]}")
+            self.current_branch.setText(f"Current Branch: {state.current_branch}")
     
     def _create_widgets(self) -> QVBoxLayout:
         layout = QVBoxLayout()
 
         page_title = QLabel("Home")
         page_title.setStyleSheet("font-size: 26px; font-weight: bold;")
-        page_subtitle = QLabel("Create a new recovery request, or import an existing one")
+        page_subtitle = QLabel("Displays repository health")
         page_subtitle.setStyleSheet("color: gray; margin-bottom: 10px;")
 
         #CREATE NEW REQUEST CARD                                
@@ -53,82 +56,57 @@ class HomePage(Page):
         repo_file_layout.addWidget(repo_file)
         repo_file_layout.addWidget(repo_browse_btn)
 
-        prompt_label = QLabel("Enter Details (Optional)")
-        prompt_field = QLineEdit()
-        prompt_field.setPlaceholderText("")
-        prompt_field.setStyleSheet("color: lightgrey;")
-
         new_recovery_btn = QPushButton("Create Recovery Request")
         new_recovery_btn.setFixedWidth(220)
-        new_recovery_btn.clicked.connect(lambda: self._handle_recovery_create(repo_file.text(), prompt_field.text()))
+        new_recovery_btn.clicked.connect(lambda: self._handle_recovery_create(repo_file.text()))
 
         new_request_card = Card(
             "Create New Request",
             items = [
                 repo_label,
                 repo_file_layout,
-                # prompt_label,
-                # prompt_field,
                 new_recovery_btn
             ]
         )
 
-        #IMPORT EXISTING REQUEST CARD
-        self.existing_recovery_btn = QPushButton("Import Recovery Request")
-        self.existing_recovery_btn.setFixedWidth(220)
-        self.existing_recovery_btn.clicked.connect(self._handle_recovery_import)
-
-        existing_request_card = Card(
-            "Import From File",
-            items= [
-                self.existing_recovery_btn
-            ]
-        )
-
-        #ACTIVE REQUEST CARD
+        #REPOSITORY HEALTH CARD
+        #REPO Labels
+        #TODO: Add styling to the labels
         self.active_session_label = QLabel("")
-        self.save_recovery_btn = QPushButton("Save To File")
-        self.save_recovery_btn.setFixedWidth(220)
-        self.save_recovery_btn.clicked.connect(self._handle_recovery_save)
-        active_request_card = Card(
-            "Active Recovery Request",
+        self.repo_status = QLabel()
+        self.repo_head = QLabel()
+        self.current_branch = QLabel()
+
+        self.active_request_card = Card(
+            "Repository Health",
             items = [
                 self.active_session_label,
-                self.save_recovery_btn,
+                self.repo_status,
+                self.repo_head,
+                self.current_branch,
             ]
         )
         
         layout.addWidget(page_title)
         layout.addWidget(page_subtitle)
         layout.addWidget(new_request_card)
-        layout.addWidget(existing_request_card)
-        layout.addWidget(active_request_card)
+        # layout.addWidget(existing_request_card)
+        layout.addWidget(self.active_request_card)
         layout.addStretch()
 
         return layout
 
-    def _handle_recovery_create(self, repo_path: str, user_prompt: str):
-        print("creating active session", repo_path, user_prompt)
-        self.recovery_service.create_recovery_request(repo_path, user_prompt)
+    def _handle_recovery_create(self, repo_path: str):
+        print("creating recovery request")
+
+        self.perform_background_task (
+            fn=self.recovery_service.create_recovery_request, 
+            on_success=self._on_request_created,
+            title="Creating Recovery Session",
+            text="Analyzing Git Repository...",
+            repo_path=repo_path
+        )
+
+    def _on_request_created(self, result):
+        print("on recovery request created")
         self.root.notify_UI_refresh(self.recovery_service.active_session)
-        # worker = Worker(self.recovery_service.handle_recovery, repo_path, user_prompt)
-        # worker.signals.result.connect(self.show_result)
-        # QThreadPool.globalInstance().start(worker)
-
-    def _handle_recovery_import(self):
-        print("importing recovery session")
-        recovery_session_file = self.browse_file()
-        self.recovery_service.import_recovery_request(recovery_session_file)
-        self.root.notify_UI_refresh(self.recovery_service.active_session)
-
-    def _handle_recovery_save(self):
-        pass
-
-    def show_result(self, result):
-        dialog_response = QMessageBox(self)
-        dialog_response.setWindowTitle("AI Response")
-        dialog_response.setText(result)
-
-        ok_btn = dialog_response.exec()
-        # if ok_btn == QMessageBox.Ok:
-        #     print("okay!")

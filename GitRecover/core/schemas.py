@@ -1,44 +1,55 @@
-from dataclasses import dataclass, asdict
-import json
+from dataclasses import dataclass, field
+from enum import Enum
+
+class RepoStatus(Enum):
+    CLEAN = "Clean"
+    REBASE = "Rebasing"
+    MERGE = "Merging"
+    CHERRY_PICK = "Cherry-Picking"
+    DETACHED = "Detached HEAD"
+    DIRTY = "Dirty (Uncommitted Changes)"
+
+@dataclass
+class IndexItem:
+    mode: str
+    hash: str
+    stage: int
+    file_path: str
+
+    @property
+    def is_conflict(self) -> bool:
+        '''stage > 0 => active merge conflict'''
+        return self.stage > 0
 
 @dataclass
 class GitCommit:
     hash: str
     message: str
-    date: str
     author: str
+    date: str
+    is_dangling: bool = False
+    parents: list[str] = field(default_factory=list)
 
 @dataclass
 class RepositoryState:
-    head: str
-    refs: list[str]
-    status: str #TODO This should be changed to enum
-    current_head: str
-    current_branch: str
-    is_dirty: bool
+    status: RepoStatus
+    current_head: str = "Unknown"
+    current_branch: str = ""
+    staging_area: list[IndexItem] = field(default_factory=list)
+
+    @property
+    def is_clean(self) -> bool:
+        return self.status == RepoStatus.CLEAN
 
 @dataclass
-class GitHistory:
-    local_commits: list[str]
-    staged: str
+class RepositoryHistory:
+    commit_history: list[GitCommit]
+    refs: dict[str, str] = field(default_factory=dict)
+    unpushed_commits: str = ""
 
 @dataclass
 class RecoveryRequest:
-    repository_state: RepositoryState
-    git_history: GitHistory
-    user_prompt: str
     repo_path: str
-    chat_history: list[str]
-
-    def to_payload(self) -> dict[str, object]:
-        return asdict(self)
-
-    def save_to_disk(self, filepath: str):
-        with open(filepath, "w") as f:
-            json.dump(self.to_payload(), f, indent=2)
-
-    def load_from_disk(self, filepath: str):
-        with open(filepath, "r") as f:
-            data = json.dumpstr()
-
-        return data
+    state: RepositoryState
+    history: RepositoryHistory
+    chat_history: list[str] = field(default_factory=list)

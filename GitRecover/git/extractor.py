@@ -1,47 +1,119 @@
 from pathlib import Path
 from GitRecover.utils import run_cmd
+from GitRecover.core.schemas import RepoStatus
 
-#TODO Create an enum for RepoState
-def get_repo_state(repo_path: str | Path | None = None) -> str:
+def get_repo_status(repo_path: str) -> RepoStatus:
     git_dir = Path(repo_path) / ".git"
 
     #Check for ongoing operations
-    if (git_dir / "rebase_merge").exists() or (git_dir / "rebase_apply").exists():
-        return "InRebase"
+    if (git_dir / "rebase-merge").exists() or (git_dir / "rebase-apply").exists():
+        return RepoStatus.REBASE
 
     if (git_dir / "MERGE_HEAD").exists():
-        return "InMerge/Conflict"
+        return RepoStatus.MERGE
 
     if (git_dir / "CHERRY_PICK_HEAD").exists():
-        return "InCherryPick"
+        return RepoStatus.CHERRY_PICK
 
-    #Check for detached HEAD
+    branch = get_current_branch(repo_path)
+    if not branch:
+        return RepoStatus.DETACHED
 
-    #Check for uncommitted changes
+    is_dirty = run_cmd("git", "status", "--porcelain", cwd=repo_path).strip()
+    if is_dirty:
+        return RepoStatus.DIRTY
 
-    #TODO Determine if any other checks needed
+    #If all the above checks passed then repo state is considered clean
+    return RepoStatus.CLEAN
 
-    return "Clean"
+def get_current_head(repo_path: str) -> str:
+    result = run_cmd("git", "rev-parse", "HEAD", cwd=repo_path)
 
+    if result:
+        return result.strip()
 
-def get_repo_structure(repo_path: str | Path | None = None) -> str:
-    return run_cmd("git", "repo structure", "--format=lines", cwd=repo_path)
+    #By default if cannot determine HEAD, return "Unknown"
+    return "Unknown"
 
-def get_local_commits(repo_path: str | Path | None = None) -> str:
+def get_current_branch(repo_path: str) -> str:
+    result = run_cmd("git", "symbolic-ref", "--short", "-q", "HEAD", cwd=repo_path)
+    if result:
+        return result.strip()
+
+    #default return empty string for current branch
+    return ""
+
+def get_recent_commits(repo_path: str, max_count: int = 30) -> list[str]:
+    '''commits including those not part of commit tree (orphaned commits found via reflog)'''
+
+    #creates a format template we can use in our command to format the output
+    #Hash | Parents | Author | Date | Reflog Action
+    reflog_format = "%H|%P|%an|%ad|%gs"
+    result = run_cmd("git", "log", "-g", f"-n{max_count}", f"--format={reflog_format}", "--date=short", cwd=repo_path).strip()
+
+    commits = []
+    if result:
+        for line in result.splitlines():
+            line_parts = line.split("|", 4)
+            if len(line_parts) == 5:
+                parents = []
+                if line_parts[1]:
+                    parents = line_parts[1].split()
+                commits.append({
+                    "hash": line_parts[0],
+                    "parents": parents,
+                    "author": line_parts[2],
+                    "date": line_parts[3],
+                    "message": line_parts[4]
+                })
+    return commits
+
+def get_dangling_commits(repo_path: str) -> list[str]:
+    result = run_cmd("git", "fsck", "--lost-found", cwd=repo_path).strip()
+    if not result:
+        return []
+
+    dangling_commits = []
+    for line in result.splitlines():
+        if "dangling commit" in line:
+            line_parts = line.split()
+            if len(line_parts) >= 3:
+                dangling_commits.append(line_parts[2])
+
+    return dangling_commits
+
+def get_unpushed_commits(repo_path: str) -> str:
+    '''Returns commits that haven't been pushed upstream yet'''
     return run_cmd("git", "cherry", "-v", cwd=repo_path)
 
-def get_refs(repo_path: str | Path | None = None) -> str:
-    return run_cmd("git", "for-each-ref", cwd=repo_path)
+def get_refs(repo_path: str) -> str:
+    result = run_cmd("git", "for-each-ref", cwd=repo_path)
 
-def get_staging_area(repo_path: str | Path | None = None) -> str:
+    #Clean up result and strip away any formatting
+    refs = {}
+    for line in result.strip().splitlines():
+        hash_val, ref_name = line.split(" ", 1)
+        #Each ref key contains the hash for that ref
+        refs[ref_name] = hash_val
+
+    return refs
+
+def get_staging_area(repo_path: str) -> list[dict]:
     '''Gets index/staging area'''
-    return run_cmd("git", "ls-files", "-s", cwd=repo_path)
+    result = run_cmd("git", "ls-files", "-s", cwd=repo_path)
+    if not result:
+        return []
 
-def get_modified_files(repo_path: str | Path | None = None) -> str:
-    return run_cmd("git", "ls-files", "-s", cwd=repo_path)
-
-def get_current_head(repo_path: str | Path | None = None) -> str:
-    return run_cmd("git", "rev-parse", "HEAD", cwd=repo_path)
-
-def get_fsck_checks(repo_path: str | Path | None = None) -> str:
-    return run_cmd("git", "fsck,", "--full", "--strict", "--unreachable", "--dangling", "--lost-found", "--verbose", cwd=repo_path)
+    #Create dictionary items for each index
+    index_items = []
+    for line in result.strip().splitlines():
+        line_parts = line.split(maxsplit=3)
+        if len(line_parts) == 4:
+            index_items.append({
+                "mode": line_parts[0],
+                "hash": line_parts[1],
+                "stage": int(line_parts[2]),
+                "file_path": line_parts[3]
+            })
+        
+    return index_items

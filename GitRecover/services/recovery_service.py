@@ -30,60 +30,73 @@ For other binary files (pack files, etc) I'll be using plumbing commands (git fs
 """
 import GitRecover.git.extractor as extractor
 from GitRecover.ai.llm_provider import LLMProvider
-from GitRecover.core.schemas import RecoveryRequest, RepositoryState, GitHistory
+from GitRecover.core.schemas import RecoveryRequest, RepositoryState, RepositoryHistory, RepoStatus, GitCommit, IndexItem
 
 class RecoveryService:
     def __init__(self, llm_provider):
         self.llm_provider: LLMProvider = llm_provider
         self.active_session: RecoveryRequest | None = None
     
-    def _create_active_session(self, repo_path: str, user_prompt: str) -> RecoveryRequest:
+    def _create_active_session(self, repo_path: str) -> RecoveryRequest:
         current_head: str = extractor.get_current_head(repo_path)
-        staged: str = extractor.get_staging_area(repo_path)
-        local_commits: str = extractor.get_local_commits(repo_path)
+        current_branch: str = extractor.get_current_branch(repo_path)
+        repo_status = extractor.get_repo_status(repo_path)
 
-        repository_state = RepositoryState(
-            head=current_head,
-            refs="",
-            status="Clean",
-            current_head=current_head,
-            current_branch="Main",
-            is_dirty=False
+        #TODO staging area
+        #TODO refs
+        #TODO unpushed commits
+
+        repo_state = RepositoryState(
+            status = repo_status,
+            current_head = current_head,
+            current_branch = current_branch,
+
         )
 
-        git_history = GitHistory(
-            local_commits=local_commits.splitlines(),
-            staged=staged
+        raw_commits = extractor.get_recent_commits(repo_path)
+        commit_history = []
+        for commit in raw_commits:
+            commit_history.append(GitCommit(
+                hash=commit["hash"],
+                message=commit["message"],
+                author=commit["author"],
+                date=commit["date"],
+                parents=commit["parents"],
+                is_dangling=False #TODO Need to update this accordingly
+            ))
+        
+        repo_history = RepositoryHistory(
+            commit_history=commit_history
         )
-
+        
         request = RecoveryRequest(
-            repository_state=repository_state,
-            git_history=git_history,
-            user_prompt=user_prompt,
-            repo_path=repo_path,
-            chat_history=[]
+            repo_path = repo_path,
+            state = repo_state,
+            history = repo_history,
+            chat_history = []
         )
 
         return request
 
-    def create_recovery_request(self, repo_path: str, user_prompt: str=""):
-        self.active_session = self._create_active_session(repo_path, user_prompt)
-        # self.save_recovery_request()
-        # payload = self._create_request_payload(repo_path, user_prompt)
+    def create_recovery_request(self, repo_path: str, progress_callback=None):
+        progress_callback(0, "Extracting Git Data...")
+        self.active_session = self._create_active_session(repo_path)
+        progress_callback(40, "Initializing Local LLM...")
+        self.llm_provider.load_model()
+        progress_callback(50, "Diagnosing Repository Health...")
+        #TODO Get initial feedback from AI regarding their diagnosis of repository
+        #TODO I think this AI feedback should be popup because otherwise it will become stale when user chats more in AI window
         # ai_feedback = self.llm_provider.generate_response(payload)
+        import time
+        time.sleep(2)
+        progress_callback(100, "Recovery Request Active")
+        
+        #TODO: determine if method should return anything or not
         # return ai_feedback
-
-    def import_recovery_request(self, repo_path):
-        self.active_session.load_from_disk(repo_path)
-
-    def save_recovery_request(self, recovery_request: RecoveryRequest):
-        with open ("", "w") as f:
-            pass
 
     def handle_chat_message(self, user_message: str):
         if not self.active_session:
-            print("No active session")
-            return 
+            return "Error: No active Git recovery session."
 
         chat_history = self.active_session.chat_history
         chat_history.append({"role": "user", "content": user_message})
