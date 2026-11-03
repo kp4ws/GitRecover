@@ -37,5 +37,8 @@ def commit(filename, content, message):
     run_scenario_cmd("git", "commit", "-m", f"{message}")
     return run_scenario_cmd("git", "rev-parse", "HEAD") #return head pointer
 
+def merge(branch_name):
+    run_scenario_cmd("git", "merge", branch_name)
+
 def print_scenario_report(title):
     print(f"Scenario Ready: {title}\nRepository: {REPO_DIR}")
