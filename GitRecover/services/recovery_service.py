@@ -83,18 +83,18 @@ class RecoveryService:
         self.active_session = self._create_active_session(repo_path)
         progress_callback(40, "Initializing Local LLM...")
         self.llm_provider.load_model()
-        progress_callback(50, "Diagnosing Repository Health...")
+        
         #TODO Get initial feedback from AI regarding their diagnosis of repository
+        # progress_callback(50, "Diagnosing Repository Health...")
         #TODO I think this AI feedback should be popup because otherwise it will become stale when user chats more in AI window
         # ai_feedback = self.llm_provider.generate_response(payload)
-        import time
-        time.sleep(2)
+        
         progress_callback(100, "Recovery Request Active")
         
         #TODO: determine if method should return anything or not
         # return ai_feedback
 
-    def handle_chat_message(self, user_message: str):
+    def handle_chat_message(self, user_message: str, progress_callback=None):
         if not self.active_session:
             return "Error: No active Git recovery session."
 

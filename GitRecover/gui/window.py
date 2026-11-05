@@ -7,6 +7,9 @@ from GitRecover.gui.pages.history_page import HistoryPage
 from GitRecover.gui.pages.status_page import StatusPage
 from GitRecover.gui.components.sidebar import Sidebar
 from GitRecover.gui.components.chat_panel import ChatPanel
+from PySide6.QtCore import QThreadPool
+from GitRecover.workers.worker_thread import Worker
+from GitRecover.gui.components.progress_dialog import ProgressDialog
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -50,7 +53,7 @@ class MainWindow(QMainWindow):
         self.sidebar.navigation_requested.connect(self.navigate_to)
 
         #TODO: Determine if there's a cleaner way of implementing the chat panel
-        self.chat_panel = ChatPanel(recovery_service)
+        self.chat_panel = ChatPanel(recovery_service, self)
 
         self.ui_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.ui_splitter.addWidget(self.pages)
@@ -76,6 +79,31 @@ class MainWindow(QMainWindow):
         for i in range(self.pages.count()):
             page = self.pages.widget(i)
             page.refresh_UI()
+
+    def perform_background_task(self, fn, on_success=None, on_error=None, title="Processing...", text="", show_progress=True, *args, **kwargs):
+        if show_progress:
+            progress_dialog = ProgressDialog(title=title, text=text, parent=self)
+            progress_dialog.show()
+
+        worker = Worker(fn, *args, **kwargs)
+        if show_progress:
+            worker.signals.progress.connect(progress_dialog.update_progress)
+
+        if on_success:
+            worker.signals.result.connect(on_success)
+
+        if on_error:
+            worker.signals.error.connect(on_error)
+
+        def cleanup():
+            if show_progress:
+                progress_dialog.close()
+                progress_dialog.deleteLater()
+
+        if show_progress:
+            worker.signals.finished.connect(cleanup)
+        
+        QThreadPool.globalInstance().start(worker)
 
     def _apply_styles(self):
         self.setStyleSheet("""

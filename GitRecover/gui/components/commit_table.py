@@ -18,12 +18,15 @@ class CommitTable(QTableWidget):
         self.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents) #Structure Btn
 
         self.horizontalHeader().setSectionsMovable(True)
+        self.horizontalHeader().setMinimumSectionSize(110)
         self.verticalHeader().setVisible(False)
+        self.verticalHeader().setDefaultSectionSize(45)
 
         #Make table read only
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.setAlternatingRowColors(True)
 
     def refresh_data(self, commits: list[GitCommit]):
         self.setRowCount(len(commits))
@@ -37,15 +40,15 @@ class CommitTable(QTableWidget):
             #status column
             if commit.is_dangling:
                 status_item = QTableWidgetItem("Orphaned")
-                status_item.setForeground(QColor.red)
+                status_item.setForeground(QColor("red"))
             else:
                 status_item = QTableWidgetItem("Active")
-                status_item.setForeground(QColor.green)
+                status_item.setForeground(QColor("green"))
 
             #type column
             if len(commit.parents) > 1:
                 type_item = QTableWidgetItem("Merge")
-                type_item.setForeground(QColor.yellow)
+                type_item.setForeground(QColor("darkGoldenrod"))
             else:
                 type_item = QTableWidgetItem()
             
@@ -53,10 +56,13 @@ class CommitTable(QTableWidget):
             self.setItem(row, 1, commit_message)
             self.setItem(row, 2, commit_author)
             self.setItem(row, 3, commit_date)
-            self.setItem(row, 4, status_item),
+            self.setItem(row, 4, status_item)
             self.setItem(row, 5, type_item)
 
             row_type_btn = QPushButton("Show")
-            # row_type_btn.clicked.connect() #TODO connect btn to show commit popup
+            row_type_btn.clicked.connect(lambda checked, h=commit_hash: self._on_view_clicked(h))
 
             self.setCellWidget(row, 6, row_type_btn)
+
+    def _on_view_clicked(self, commit_hash: str):
+        print(f"TODO: Open details for commit {commit_hash}")

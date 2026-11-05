@@ -23,8 +23,8 @@ class HistoryPage(Page):
         if self.recovery_service.active_session is None:
             self.commit_table.setRowCount(0)
         else:
-            #TODO
-            history = self.recovery_service.active_session.git_history
+            commit_history = self.recovery_service.active_session.history.commit_history
+            self.commit_table.refresh_data(commit_history)
 
     def _create_widgets(self) -> QVBoxLayout:
         layout = QVBoxLayout()
@@ -37,6 +37,5 @@ class HistoryPage(Page):
         layout.addWidget(page_title)
         layout.addWidget(page_subtitle)
         layout.addWidget(self.commit_table)
-        layout.addStretch()
 
         return layout

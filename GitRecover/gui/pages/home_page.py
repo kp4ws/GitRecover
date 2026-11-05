@@ -25,7 +25,7 @@ class HomePage(Page):
             self.active_request_card.show()
             self.active_session_label.setText(f"Active Session: {datetime.now()}")
 
-            state = self.recovery_service.active_session.repository_state
+            state = self.recovery_service.active_session.state
 
             self.repo_status.setText(f"Repository Status: {state.status}") 
             self.repo_head.setText(f"Current HEAD: {state.current_head[:7]}")
@@ -97,13 +97,12 @@ class HomePage(Page):
         return layout
 
     def _handle_recovery_create(self, repo_path: str):
-        print("creating recovery request")
-
-        self.perform_background_task (
+        self.root.perform_background_task (
             fn=self.recovery_service.create_recovery_request, 
             on_success=self._on_request_created,
             title="Creating Recovery Session",
             text="Analyzing Git Repository...",
+            show_progress=True,
             repo_path=repo_path
         )
 

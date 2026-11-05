@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import (
@@ -11,9 +12,15 @@ from PySide6.QtWidgets import (
 )
 from GitRecover.workers.worker_thread import Worker
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from GitRecover.gui.window import MainWindow
+
 class ChatPanel(QWidget):
     def __init__(self, recovery_service, parent=None):
         super().__init__(parent)
+        self.root: MainWindow = parent
         self.recovery_service = recovery_service
         self._create_widgets()
 
@@ -60,10 +67,12 @@ class ChatPanel(QWidget):
         self.send_button.setEnabled(False)
         self.add_message("System", "Processing user prompt...")
 
-        worker = Worker(self.recovery_service.handle_chat_message, text)
-        worker.signals.result.connect(self.on_llm_response)
-        worker.signals.error.connect(self.on_llm_error)
-        QThreadPool.globalInstance().start(worker)
+        self.root.perform_background_task (
+            fn=self.recovery_service.handle_chat_message, 
+            on_success=self.on_llm_response,
+            on_error=self.on_llm_error,
+            user_message=text
+        )
 
     def on_llm_response(self, reply: str):
         self.add_message("Assistant", reply)

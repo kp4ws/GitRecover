@@ -20,7 +20,7 @@ class StatusPage(Page):
         if self.recovery_service.active_session is None:
             self.repo_status_card.hide()
         else:
-            state = self.recovery_service.active_session.repository_state
+            state = self.recovery_service.active_session.state
             self.repo_status.setText(f"Repository Status: {state.status}") 
             self.repo_head.setText(f"Current HEAD: {state.current_head}")
             self.current_branch.setText(f"Current Branch: {state.current_branch}")
