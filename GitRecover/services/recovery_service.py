@@ -62,7 +62,7 @@ class RecoveryService:
                 author=commit["author"],
                 date=commit["date"],
                 parents=commit["parents"],
-                is_dangling=False #TODO Need to update this accordingly
+                is_dangling=commit["is_dangling"]
             ))
         
         repo_history = RepositoryHistory(

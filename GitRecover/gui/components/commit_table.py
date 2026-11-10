@@ -40,17 +40,18 @@ class CommitTable(QTableWidget):
             #status column
             if commit.is_dangling:
                 status_item = QTableWidgetItem("Orphaned")
-                status_item.setForeground(QColor("red"))
+                status_item.setForeground(QBrush(QColor("red")))
             else:
                 status_item = QTableWidgetItem("Active")
-                status_item.setForeground(QColor("green"))
+                status_item.setForeground(QBrush(QColor("green")))
 
             #type column
             if len(commit.parents) > 1:
                 type_item = QTableWidgetItem("Merge")
-                type_item.setForeground(QColor("darkGoldenrod"))
+                type_item.setForeground(QBrush(QColor("darkGoldenrod")))
             else:
-                type_item = QTableWidgetItem()
+                type_item = QTableWidgetItem("Standard")
+                type_item.setForeground(QBrush(QColor("gray")))
             
             self.setItem(row, 0, commit_hash)
             self.setItem(row, 1, commit_message)
