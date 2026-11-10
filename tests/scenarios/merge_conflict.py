@@ -1,6 +1,7 @@
 from tests.scenarios.scenario_base import (
     setup_repo,
-    commit, 
+    commit,
+    merge,
     run_scenario_cmd, 
     print_scenario_report,
 )
@@ -36,11 +37,7 @@ def setup_scenario():
     )
 
     print("Triggering merge conflict...")
-    try:
-        run_scenario_cmd("git", "merge", "feature/new_feature")
-    except Exception:
-        pass
-
+    merge("feature/new_feature")
     print_scenario_report("Merge Conflict")
 
 if __name__ == "__main__":

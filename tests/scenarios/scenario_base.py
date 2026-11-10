@@ -42,3 +42,5 @@ def merge(branch_name):
 
 def print_scenario_report(title):
     print(f"Scenario Ready: {title}\nRepository: {REPO_DIR}")
+    print("Git Status")
+    print(run_scenario_cmd("git", "status"))

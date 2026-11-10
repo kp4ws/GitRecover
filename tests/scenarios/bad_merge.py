@@ -34,7 +34,7 @@ def setup_scenario():
     )
 
     print("Merging feature into main to create a merge conflict...")
-    merge("feature/new_feature")
+    merge("feature/new_feature") #TODO: This command fails.
 
     print("Developer attempts to resolve accepting wrong changes ...")
 

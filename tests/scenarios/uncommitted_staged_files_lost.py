@@ -25,6 +25,5 @@ def setup_scenario():
     run_scenario_cmd("git", "reset", "--hard", "HEAD")
 
     print_scenario_report("Lost Uncommitted Staged Files")
-
 if __name__ == "__main__":
     setup_scenario()
