@@ -14,7 +14,7 @@ To simulate this scenario, enter the following command:
 `merge_conflict.py`
  
 ## Bad Merges
-Occurs when merge goes bad, and unintended changes are merged.  
+Occurs when merge goes bad, and unintended changes are merged, such as accidentally accepting local changes over incoming changes, or vice versa.    
 
 To simulate this scenario, enter the following command:  
 `bad_merge.py`
@@ -35,7 +35,7 @@ To simulate this scenario, enter the following command:
 Occurs when developers lose their work they've staged, typically due to a hard reset.  
 
 To simulate this scenario, enter the following command:  
-`uncommitted_staged_changes.py`
+`uncommitted_staged_files_lost.py`
 
 ## Dropped Stash
 Occurs when developer accidentally runs `git stash drop` which removes anything they have stored in the stash  
