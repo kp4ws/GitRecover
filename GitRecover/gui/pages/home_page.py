@@ -6,7 +6,9 @@ from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, 
 from pathlib import Path
 from GitRecover.gui.pages.page import Page
 from GitRecover.gui.components.card import Card
+from GitRecover.gui.colors import GOOD, BAD, WARNING
 from datetime import datetime
+from GitRecover.core.schemas import RepoStatus
 
 if TYPE_CHECKING:
     from GitRecover.gui.window import MainWindow
@@ -26,10 +28,17 @@ class HomePage(Page):
             self.active_session_label.setText(f"Active Session: {datetime.now()}")
 
             state = self.recovery_service.active_session.state
+            if state.status == RepoStatus.CLEAN:
+                color = GOOD
+            elif state.status == RepoStatus.DIRTY:
+                color = BAD
+            else:
+                color = WARNING
+            self.repo_status.setStyleSheet(f"color: {color};")
 
-            self.repo_status.setText(f"Repository Status: {state.status}") 
-            self.repo_head.setText(f"Current HEAD: {state.current_head[:7]}")
-            self.current_branch.setText(f"Current Branch: {state.current_branch}")
+            self.repo_status.setText(f"<b>Repository Status:</b> {state.status.value}") 
+            self.repo_head.setText(f"<b>Current HEAD:</b> {state.current_head[:7]}")
+            self.current_branch.setText(f"<b>Current Branch:</b> {state.current_branch}")
     
     def _create_widgets(self) -> QVBoxLayout:
         layout = QVBoxLayout()
@@ -73,9 +82,16 @@ class HomePage(Page):
         #REPO Labels
         #TODO: Add styling to the labels
         self.active_session_label = QLabel("")
+        self.active_session_label.setStyleSheet("font-weight: bold; margin-bottom: 5px;")
+
         self.repo_status = QLabel()
+        self.repo_status.setStyleSheet("")
+        
         self.repo_head = QLabel()
+        self.repo_head.setStyleSheet("")
+        
         self.current_branch = QLabel()
+        self.current_branch.setStyleSheet("")
 
         self.active_request_card = Card(
             "Repository Health",

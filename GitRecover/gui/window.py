@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
     def __init__(self, recovery_service: RecoveryService):
         super().__init__()
         self.setWindowTitle("Git Recover v.0.1.0")
-        self.resize(1280, 720)
+        self.resize(1600, 900)
 
         self.pages = QStackedWidget()
         self.home_page = HomePage(self, recovery_service)
@@ -59,8 +59,8 @@ class MainWindow(QMainWindow):
         self.ui_splitter.addWidget(self.pages)
         self.ui_splitter.addWidget(self.chat_panel)
 
-        self.ui_splitter.setStretchFactor(0, 3)
-        self.ui_splitter.setStretchFactor(1, 2)
+        self.ui_splitter.setStretchFactor(0, 2)
+        self.ui_splitter.setStretchFactor(1, 1)
 
         layout.addWidget(self.sidebar)
         layout.addWidget(self.ui_splitter, 1)

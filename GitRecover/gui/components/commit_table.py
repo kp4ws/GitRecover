@@ -1,6 +1,14 @@
-from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QPushButton
-from PySide6.QtGui import QBrush, QColor
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QHeaderView,
+    QLabel,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+)
 from GitRecover.core.schemas import GitCommit
+from GitRecover.gui.colors import GOOD, BAD, WARNING
+from GitRecover.gui.components.commit_details import CommitDetails
 
 class CommitTable(QTableWidget):
     def __init__(self):
@@ -39,31 +47,41 @@ class CommitTable(QTableWidget):
 
             #status column
             if commit.is_dangling:
-                status_item = QTableWidgetItem("Orphaned")
-                status_item.setForeground(QBrush(QColor("red")))
+                status_text = "Orphaned"
+                status_color = BAD
             else:
-                status_item = QTableWidgetItem("Active")
-                status_item.setForeground(QBrush(QColor("green")))
+                status_text = "Active"
+                status_color = GOOD
 
             #type column
             if len(commit.parents) > 1:
-                type_item = QTableWidgetItem("Merge")
-                type_item.setForeground(QBrush(QColor("darkGoldenrod")))
+                type_text = "Merge Commit"
+                type_color = WARNING
             else:
-                type_item = QTableWidgetItem("Standard")
-                type_item.setForeground(QBrush(QColor("gray")))
+                type_text = "Regular Commit"
+                type_color = None
             
             self.setItem(row, 0, commit_hash)
             self.setItem(row, 1, commit_message)
             self.setItem(row, 2, commit_author)
             self.setItem(row, 3, commit_date)
-            self.setItem(row, 4, status_item)
-            self.setItem(row, 5, type_item)
 
-            row_type_btn = QPushButton("Show")
-            row_type_btn.clicked.connect(lambda checked, h=commit_hash: self._on_view_clicked(h))
+            #Adds coloring to status and type columns
+            self.setCellWidget(row, 4, self._colored_label(status_text, status_color))
+            if type_color:
+                self.setCellWidget(row, 5, self._colored_label(type_text, type_color))
+            else:
+                self.setItem(row, 5, QTableWidgetItem(type_text))
 
+            row_type_btn = QPushButton("Details")
+            row_type_btn.clicked.connect(lambda checked=False, selected_commit=commit: self._on_view_clicked(selected_commit))
             self.setCellWidget(row, 6, row_type_btn)
 
-    def _on_view_clicked(self, commit_hash: str):
-        print(f"TODO: Open details for commit {commit_hash}")
+    def _on_view_clicked(self, commit: GitCommit):
+        dialog = CommitDetails(commit, self)
+        dialog.exec()
+
+    def _colored_label(self, text: str, color: str) -> QLabel:
+        label = QLabel(text)
+        label.setStyleSheet(f"color: {color}; background: transparent;")
+        return label

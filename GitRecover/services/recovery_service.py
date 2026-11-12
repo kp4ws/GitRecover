@@ -50,7 +50,7 @@ class RecoveryService:
             status = repo_status,
             current_head = current_head,
             current_branch = current_branch,
-
+ 
         )
 
         raw_commits = extractor.get_recent_commits(repo_path)

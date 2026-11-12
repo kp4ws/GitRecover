@@ -1,0 +1,3 @@
+GOOD = "#81C784"
+BAD = "#E57373"
+WARNING = "#FFB74D"

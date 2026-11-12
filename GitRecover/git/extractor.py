@@ -63,7 +63,6 @@ def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
                 if line_parts[1]:
                     parents = line_parts[1].split()
 
-                print(dangling_set, commit_hash)
                 commits.append({
                     "hash": commit_hash,
                     "parents": parents,
