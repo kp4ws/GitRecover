@@ -33,9 +33,12 @@ class CommitDetails(QDialog):
             details.addRow("Type", self._detail_label("Regular Commit"))
 
         if commit.parents:
-            details.addRow("Parents:", self._detail_label("\n".join(commit.parents)), word_wrap=True)
+            details.addRow("Parents:", self._detail_label("\n".join(commit.parents), word_wrap=True))
         else:
-            details.addRow("Parents:", self._detail_label("None"), word_wrap=True)
+            details.addRow("Parents:", self._detail_label("None"))
+
+        if commit.git_action:
+            details.addRow("Git action:", self._detail_label(commit.git_action, word_wrap=True))
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
@@ -48,6 +51,7 @@ class CommitDetails(QDialog):
         layout.addWidget(buttons)
 
     def _copy_commit_details(self, commit: GitCommit, button: QPushButton) -> None:
+        #TODO this functionality is repeated, consider refactoring code to make this cleaner
         if commit.is_dangling:
             status = "Dangling"
         else:
@@ -72,6 +76,10 @@ class CommitDetails(QDialog):
             f"Type: {commit_type}\n"
             f"Parents: {parents}"
         )
+
+        if commit.git_action:
+            details += f"\nGit action: {commit.git_action}"
+        
         QGuiApplication.clipboard().setText(details)
         button.setText("Copied")
 

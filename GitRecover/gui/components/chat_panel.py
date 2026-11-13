@@ -71,7 +71,8 @@ class ChatPanel(QWidget):
             fn=self.recovery_service.handle_chat_message, 
             on_success=self.on_llm_response,
             on_error=self.on_llm_error,
-            user_message=text
+            user_message=text,
+            show_progress=False,
         )
 
     def on_llm_response(self, reply: str):

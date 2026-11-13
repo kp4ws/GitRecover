@@ -46,35 +46,50 @@ def get_current_branch(repo_path: str) -> str:
 def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
     '''commits including those not part of commit tree (orphaned commits found via reflog)'''
 
-    dangling_set = get_dangling_commits(repo_path)
+    dangling_set = get_dangling_commit_set(repo_path)
 
-    #creates a format template we can use in our command to format the output
-    #Hash | Parents | Author | Date | Reflog Action
-    reflog_format = "%H|%P|%an|%ad|%gs"
+    reflog_fields = [
+        "%H", #commit hash
+        "%P", #parent hashes
+        "%an", #author
+        "%ad", #date
+        "%s", #message
+        "%gs", #git action
+    ]
+
+    #We use null delimiter to join the fields (so that it doesn't appear in git command)
+    reflog_format = "%x00".join(reflog_fields)
     result = run_cmd("git", "log", "-g", f"-n{max_count}", f"--format={reflog_format}", "--date=short", cwd=repo_path).strip()
 
     commits = []
     if result:
-        for line in result.splitlines():
-            line_parts = line.split("|", 4)
-            if len(line_parts) == 5:
-                commit_hash = line_parts[0]
+        for record in result.splitlines():
+            record_fields = record.split("\x00", 5) #split on null delimiter
+            if len(record_fields) == 6:
+                commit_hash = record_fields[0]
+                parent_hashes = record_fields[1]
+                author = record_fields[2]
+                date = record_fields[3]
+                message = record_fields[4]
+                git_action = record_fields[5]
+
                 parents = []
-                if line_parts[1]:
-                    parents = line_parts[1].split()
+                if parent_hashes:
+                    parents = parent_hashes.split()
 
                 commits.append({
                     "hash": commit_hash,
                     "parents": parents,
-                    "author": line_parts[2],
-                    "date": line_parts[3],
-                    "message": line_parts[4],
+                    "author": author,
+                    "date": date,
+                    "message": message,
+                    "git_action": git_action,
                     "is_dangling": commit_hash in dangling_set
                 })
 
     return commits
 
-def get_dangling_commits(repo_path: str) -> set[str]:
+def get_dangling_commit_set(repo_path: str) -> set[str]:
     #Check for dangling commits
     result = run_cmd("git", "fsck", "--lost-found", cwd=repo_path).strip()
     if not result:

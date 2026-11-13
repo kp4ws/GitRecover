@@ -29,6 +29,7 @@ class GitCommit:
     date: str
     is_dangling: bool = False
     parents: list[str] = field(default_factory=list)
+    git_action: str = ""
 
 @dataclass
 class RepositoryState:

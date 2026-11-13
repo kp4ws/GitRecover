@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QGroupBox, QLabel, QHBoxLayout, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFormLayout
 from pathlib import Path
 from GitRecover.gui.pages.page import Page
 from GitRecover.gui.components.card import Card
+from GitRecover.gui.components.recovery_report import RecoveryReport
 from GitRecover.gui.colors import GOOD, BAD, WARNING
-from datetime import datetime
 from GitRecover.core.schemas import RepoStatus
+from datetime import datetime
 
 if TYPE_CHECKING:
     from GitRecover.gui.window import MainWindow
@@ -22,23 +23,66 @@ class HomePage(Page):
 
     def refresh_UI(self):
         if self.recovery_service.active_session is None:
-            self.active_session_label.setText("No active session")
+            self.session.setText("No Active Session")
+            self.repo_path.setText("")
+            self.repo_head.setText("")
+            self.current_branch.setText("")
+            self.repo_status.setText("")
+            self.dangling_commits.setText("")
+            self.remote_sync.setText("")
         else:
-            self.active_request_card.show()
-            self.active_session_label.setText(f"Active Session: {datetime.now()}")
+            request = self.recovery_service.active_session
+            state = request.state
+            
+            self.session.setText(f"Active Session: {datetime.now().strftime("%d/%m/%Y, %H:%M:%S")}")
+            self.repo_path.setText(request.repo_path)
+            self.repo_head.setText(state.current_head[:7])
 
-            state = self.recovery_service.active_session.state
-            if state.status == RepoStatus.CLEAN:
-                color = GOOD
-            elif state.status == RepoStatus.DIRTY:
-                color = BAD
+            #If empty string, then its in detatched head state
+            if state.current_branch != "":
+                self.current_branch.setText(state.current_branch)
+                self.current_branch.setStyleSheet("")
+                self.health_form.labelForField(self.current_branch).setStyleSheet("")
+                self.repo_head.setStyleSheet("")
+                self.health_form.labelForField(self.repo_head).setStyleSheet("")
             else:
-                color = WARNING
-            self.repo_status.setStyleSheet(f"color: {color};")
+                self.current_branch.setText("Detatched HEAD")
+                self.current_branch.setStyleSheet(f"color: {WARNING};")
+                self.health_form.labelForField(self.current_branch).setStyleSheet(f"color:{WARNING};")
+                self.repo_head.setStyleSheet(f"color: {WARNING};")
+                self.health_form.labelForField(self.repo_head).setStyleSheet(f"color: {WARNING};")
 
-            self.repo_status.setText(f"<b>Repository Status:</b> {state.status.value}") 
-            self.repo_head.setText(f"<b>Current HEAD:</b> {state.current_head[:7]}")
-            self.current_branch.setText(f"<b>Current Branch:</b> {state.current_branch}")
+            if state.status == RepoStatus.CLEAN:
+                self.repo_status.setStyleSheet(f"color: {GOOD};")
+                self.health_form.labelForField(self.repo_status).setStyleSheet(f"color: {GOOD};")
+            elif state.status == RepoStatus.DIRTY:
+                self.repo_status.setStyleSheet(f"color: {BAD};")
+                self.health_form.labelForField(self.repo_status).setStyleSheet(f"color: {BAD};")
+            else:
+                self.repo_status.setStyleSheet(f"color: {WARNING};")
+                self.health_form.labelForField(self.repo_status).setStyleSheet(f"color: {WARNING};")
+                            
+            self.repo_status.setText(state.status.value)
+
+            dangling_hashes = []
+            for commit in request.history.commit_history:
+                if commit.is_dangling:
+                    dangling_hashes.append(commit.hash)
+
+            if len(dangling_hashes) > 0:
+                self.dangling_commits.setStyleSheet(f"color: {BAD}")
+                self.health_form.labelForField(self.dangling_commits).setStyleSheet(f"color: {BAD};")
+                                 
+            else:
+                self.dangling_commits.setStyleSheet(f"color: {GOOD}")
+                self.health_form.labelForField(self.dangling_commits).setStyleSheet(f"color: {GOOD};")
+
+            self.dangling_commits.setText(str(len(dangling_hashes)))
+
+            #TODO
+            self.remote_sync.setText("Not checked")
+            
+            self.active_request_card.show()
     
     def _create_widgets(self) -> QVBoxLayout:
         layout = QVBoxLayout()
@@ -79,34 +123,31 @@ class HomePage(Page):
         )
 
         #REPOSITORY HEALTH CARD
-        #REPO Labels
-        #TODO: Add styling to the labels
-        self.active_session_label = QLabel("")
-        self.active_session_label.setStyleSheet("font-weight: bold; margin-bottom: 5px;")
+        self.session = QLabel("")
+        self.session.setStyleSheet("margin-bottom: 10px; font-weight: bold;")
+        self.health_form = QFormLayout()
+        self.repo_path = QLabel("")
+        self.repo_status = QLabel("")
+        self.repo_head = QLabel("")
+        self.current_branch = QLabel("")
+        self.dangling_commits = QLabel("")
+        self.remote_sync = QLabel("")
 
-        self.repo_status = QLabel()
-        self.repo_status.setStyleSheet("")
-        
-        self.repo_head = QLabel()
-        self.repo_head.setStyleSheet("")
-        
-        self.current_branch = QLabel()
-        self.current_branch.setStyleSheet("")
+        self.health_form.addRow("Repository:", self.repo_path)
+        self.health_form.addRow("HEAD:", self.repo_head)
+        self.health_form.addRow("Current branch:", self.current_branch)
+        self.health_form.addRow("Status:", self.repo_status)
+        self.health_form.addRow("Dangling commits:", self.dangling_commits)
+        self.health_form.addRow("Remote sync:", self.remote_sync)
 
         self.active_request_card = Card(
-            "Repository Health",
-            items = [
-                self.active_session_label,
-                self.repo_status,
-                self.repo_head,
-                self.current_branch,
-            ]
+            "Repository Health", 
+            items=[self.session, self.health_form]
         )
         
         layout.addWidget(page_title)
         layout.addWidget(page_subtitle)
         layout.addWidget(new_request_card)
-        # layout.addWidget(existing_request_card)
         layout.addWidget(self.active_request_card)
         layout.addStretch()
 
@@ -123,5 +164,16 @@ class HomePage(Page):
         )
 
     def _on_request_created(self, result):
-        print("on recovery request created")
-        self.root.notify_UI_refresh(self.recovery_service.active_session)
+        request = result or self.recovery_service.active_session
+        if request is None:
+            print("Warning: Recovery Request returning null")
+            return
+        
+        self.root.notify_UI_refresh(request)
+
+        recovery_report = RecoveryReport(request, self)
+        recovery_report.view_history_event.connect(lambda: self.root.navigate_to(1))
+
+        #TODO Consider adding AI suggestion to recovery report
+
+        recovery_report.exec()

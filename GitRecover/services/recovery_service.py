@@ -30,7 +30,7 @@ For other binary files (pack files, etc) I'll be using plumbing commands (git fs
 """
 import GitRecover.git.extractor as extractor
 from GitRecover.ai.llm_provider import LLMProvider
-from GitRecover.core.schemas import RecoveryRequest, RepositoryState, RepositoryHistory, RepoStatus, GitCommit, IndexItem
+from GitRecover.core.schemas import GitCommit, RecoveryRequest, RepositoryHistory, RepositoryState
 
 class RecoveryService:
     def __init__(self, llm_provider):
@@ -42,9 +42,7 @@ class RecoveryService:
         current_branch: str = extractor.get_current_branch(repo_path)
         repo_status = extractor.get_repo_status(repo_path)
 
-        #TODO staging area
-        #TODO refs
-        #TODO unpushed commits
+        #TODO If time permits, consider adding additional git entries to the request (staging area, refs, unpushed commits)
 
         repo_state = RepositoryState(
             status = repo_status,
@@ -62,7 +60,8 @@ class RecoveryService:
                 author=commit["author"],
                 date=commit["date"],
                 parents=commit["parents"],
-                is_dangling=commit["is_dangling"]
+                is_dangling=commit["is_dangling"],
+                git_action=commit["git_action"],
             ))
         
         repo_history = RepositoryHistory(
@@ -78,30 +77,57 @@ class RecoveryService:
 
         return request
 
+    def _prepare_recovery_context(self, request: RecoveryRequest) -> str:
+        context = f"Repository: {request.repo_path}\n"
+        context += f"Status: {request.state.status.value}\n"
+
+        if request.state.current_branch != "":
+            context += f"Branch: {request.state.current_branch}\n"
+        else:
+            context += "Detatched HEAD\n"
+
+        context += f"HEAD: {request.state.current_head}\n"
+
+        #TODO remote sync
+
+        #Only check 15 most recent commits for dangling
+        max_dangling_check = min(len(request.history.commit_history), 15)
+        for i in range(0, max_dangling_check):
+            commit = request.history.commit_history[i] 
+            if commit.is_dangling:
+                context+= f"Dangling commit: {commit.hash}\n"
+
+        return context
+
     def create_recovery_request(self, repo_path: str, progress_callback=None):
         progress_callback(0, "Extracting Git Data...")
         self.active_session = self._create_active_session(repo_path)
         progress_callback(40, "Initializing Local LLM...")
         self.llm_provider.load_model()
         
-        #TODO Get initial feedback from AI regarding their diagnosis of repository
-        # progress_callback(50, "Diagnosing Repository Health...")
-        #TODO I think this AI feedback should be popup because otherwise it will become stale when user chats more in AI window
-        # ai_feedback = self.llm_provider.generate_response(payload)
-        
         progress_callback(100, "Recovery Request Active")
         
-        #TODO: determine if method should return anything or not
-        # return ai_feedback
+    def generate_diagnostic_suggestion():
+        pass #TODO if time permits, this function could be used to generate an AI suggestion for recovery request report
 
     def handle_chat_message(self, user_message: str, progress_callback=None):
         if not self.active_session:
             return "Error: No active Git recovery session."
 
+        if progress_callback is not None:
+            progress_callback(0, "Generating AI response")
+
         chat_history = self.active_session.chat_history
+        pending_history = [*chat_history, {"role": "user", "content": user_message}]
+        
+        context = self._prepare_recovery_context(self.active_session)
+        ai_response = self.llm_provider.generate_response(pending_history, context)
+        
+        #Update chat history
         chat_history.append({"role": "user", "content": user_message})
-        ai_response = self.llm_provider.generate_response(chat_history)
         chat_history.append({"role": "assistant", "content": ai_response})
 
         #TODO create filtering mechanism where if AI response certainty is low, system forces it to retry up to N times
+        if progress_callback is not None:
+            progress_callback(100, "AI response ready.")
         return ai_response
