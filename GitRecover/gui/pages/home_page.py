@@ -8,7 +8,7 @@ from GitRecover.gui.pages.page import Page
 from GitRecover.gui.components.card import Card
 from GitRecover.gui.components.recovery_report import RecoveryReport
 from GitRecover.gui.colors import GOOD, BAD, WARNING
-from GitRecover.core.schemas import RepoStatus
+from GitRecover.core.schemas import RemoteSyncStatus, RepoStatus
 from datetime import datetime
 
 if TYPE_CHECKING:
@@ -79,9 +79,17 @@ class HomePage(Page):
 
             self.dangling_commits.setText(str(len(dangling_hashes)))
 
-            #TODO
-            self.remote_sync.setText("Not checked")
-            
+            if state.remote_sync.status == RemoteSyncStatus.UP_TO_DATE:
+                self.remote_sync.setStyleSheet(f"color: {GOOD};")
+                self.health_form.labelForField(self.remote_sync).setStyleSheet(f"color: {GOOD};")
+            elif state.remote_sync.status in (RemoteSyncStatus.BEHIND, RemoteSyncStatus.DIVERGED, RemoteSyncStatus.ERROR):
+                self.remote_sync.setStyleSheet(f"color: {BAD};")
+                self.health_form.labelForField(self.remote_sync).setStyleSheet(f"color: {BAD};")
+            else:
+                self.remote_sync.setStyleSheet(f"color: {WARNING};")
+                self.health_form.labelForField(self.remote_sync).setStyleSheet(f"color: {WARNING};")
+
+            self.remote_sync.setText(state.remote_sync.display_text)
             self.active_request_card.show()
     
     def _create_widgets(self) -> QVBoxLayout:

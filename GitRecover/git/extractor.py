@@ -1,6 +1,8 @@
+import os
+import subprocess
 from pathlib import Path
 from GitRecover.utils import run_cmd
-from GitRecover.core.schemas import RepoStatus
+from GitRecover.core.schemas import RemoteSyncInfo, RemoteSyncStatus, RepoStatus
 
 def get_repo_status(repo_path: str) -> RepoStatus:
     git_dir = Path(repo_path) / ".git"
@@ -42,6 +44,131 @@ def get_current_branch(repo_path: str) -> str:
 
     #default return empty string for current branch
     return ""
+
+def _run_remote_cmd(repo_path: str, *args: str) -> subprocess.CompletedProcess:
+    environment = os.environ.copy()
+    #prevents Git from waiting on terminal input
+    environment["GIT_TERMINAL_PROMPT"] = "0"
+
+    result: subprocess.CompletedProcess = run_cmd(
+        *args, 
+        cwd=repo_path,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+        env=environment,
+        return_str=False
+    )
+
+    #Empty string signifies error, so just manually return -999 as error code
+    if result == "":
+        return -999
+    
+    return result
+
+def get_remote_sync_info(repo_path: str) -> RemoteSyncInfo:
+    #If in detached head state, then return detached sync status
+    if not get_current_branch(repo_path):
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.DETACHED,
+        )
+
+    remote_result = _run_remote_cmd(repo_path, "git", "remote")
+    if remote_result.returncode != 0:
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.ERROR,
+            error_message="Error getting remote, please try again.",
+        )
+
+    remotes = remote_result.stdout.strip().splitlines()
+    #If no remote setup, then return no remote sync status    
+    if not remotes:
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.NO_REMOTE,
+        )
+
+    #grab upstream branch
+    upstream_result = _run_remote_cmd(repo_path, "git", "rev-parse", "--symbolic-full-name", "@{upstream}")
+    if upstream_result.returncode != 0:
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.NO_UPSTREAM,
+        )
+
+    upstream_ref = upstream_result.stdout.strip()
+    sorted_remotes = sorted(remotes, key=len, reverse=True)
+
+    remote_name = ""
+    upstream = ""
+    for remote in sorted_remotes:
+        remote_ref_prefix = f"refs/remotes/{remote}/"
+        match_flag = upstream_ref.startswith(remote_ref_prefix)
+
+        #Checking if upstream ref matches a remote
+        if match_flag:
+            remote_name = remote
+            upstream = upstream_ref[len("refs/remotes/"):]
+            break
+
+    if not remote_name:
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.NO_UPSTREAM,
+        )
+
+    fetch_result = _run_remote_cmd(repo_path, "git", "fetch", "--no-tags", remote_name)
+
+    if fetch_result.returncode != 0:
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.ERROR,
+            upstream=upstream,
+            error_message="Error fetching, please try again.",
+        )
+
+    upstream_counts_result = _run_remote_cmd(repo_path, "git", "rev-list", "--left-right", "--count", f"{upstream_ref}...HEAD")
+    if upstream_counts_result.returncode != 0:
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.ERROR,
+            upstream=upstream,
+            error_message="Error getting upstream counts, please try again.",
+        )
+
+    count_values = upstream_counts_result.stdout.strip().split()
+    count_flag = False
+
+    if len(count_values) != 2:
+        count_flag = True
+    for value in count_values:
+        if not value.isdigit():
+            count_flag = True
+            break 
+    if count_flag:
+        return RemoteSyncInfo(
+            status=RemoteSyncStatus.ERROR,
+            upstream=upstream,
+            error_message="Unexpected ahead/behind count, please try again.",
+        )
+
+    #Get counts for behind and ahead
+    behind = int(count_values[0])
+    ahead = int(count_values[1])
+
+    #Determine if branch is up to date or not
+    if ahead == 0 and behind == 0:
+        status = RemoteSyncStatus.UP_TO_DATE
+    elif ahead > 0 and behind == 0:
+        status = RemoteSyncStatus.AHEAD
+    elif ahead == 0 and behind > 0:
+        status = RemoteSyncStatus.BEHIND
+    else:
+        #if ahead > 0 and behind > 0, implies unique commits on both sides => diverged
+        status = RemoteSyncStatus.DIVERGED
+
+    return RemoteSyncInfo(
+        status=status,
+        upstream=upstream,
+        ahead=ahead,
+        behind=behind,
+    )
 
 def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
     '''commits including those not part of commit tree (orphaned commits found via reflog)'''

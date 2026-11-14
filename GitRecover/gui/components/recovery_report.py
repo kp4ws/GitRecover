@@ -13,8 +13,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from GitRecover.core.schemas import GitCommit, RecoveryRequest, RepoStatus
-from GitRecover.gui.components.commit_details import CommitDetails
+from GitRecover.core.schemas import RecoveryRequest, RemoteSyncStatus, RepoStatus
 from GitRecover.gui.colors import GOOD, BAD, WARNING
 
 
@@ -82,7 +81,7 @@ class RecoveryReport(QDialog):
                 more_candidates_label = QLabel("More candidate(s) are available in History.")
                 candidates_layout.addWidget(more_candidates_label)
         else:
-            candidates_layout.addWidget(QLabel("No dangling commits were identified in recent reflog entries."))
+            candidates_layout.addWidget(QLabel("No dangling commits identified."))
 
         context_group = QGroupBox("Repository context")
         details = QFormLayout(context_group)
@@ -100,7 +99,9 @@ class RecoveryReport(QDialog):
         
         dangling_commits_count = self._detail_label(str(dangling_count))
         details.addRow("Dangling commits:", dangling_commits_count)
-        details.addRow("Remote sync:", self._detail_label("Not checked"))
+        
+        remote_sync = self._detail_label(state.remote_sync.display_text, word_wrap=True)
+        details.addRow("Remote sync:", remote_sync)
 
         #TODO: This functionality is copied from home page. If time permitted, look into way to refactor this into cleaner code
         #If empty string, then its in detatched head state
@@ -133,6 +134,16 @@ class RecoveryReport(QDialog):
         else:
             dangling_commits_count.setStyleSheet(f"color: {GOOD}")
             details.labelForField(dangling_commits_count).setStyleSheet(f"color: {GOOD};")
+
+        if state.remote_sync.status == RemoteSyncStatus.UP_TO_DATE:
+            remote_sync.setStyleSheet(f"color: {GOOD};")
+            details.labelForField(remote_sync).setStyleSheet(f"color: {GOOD};")
+        elif state.remote_sync.status in (RemoteSyncStatus.BEHIND, RemoteSyncStatus.DIVERGED, RemoteSyncStatus.ERROR):
+            remote_sync.setStyleSheet(f"color: {BAD};")
+            details.labelForField(remote_sync).setStyleSheet(f"color: {BAD};")
+        elif state.remote_sync.status != RemoteSyncStatus.NOT_CHECKED:
+            remote_sync.setStyleSheet(f"color: {WARNING};")
+            details.labelForField(remote_sync).setStyleSheet(f"color: {WARNING};")
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
@@ -178,7 +189,7 @@ class RecoveryReport(QDialog):
             f"Branch: {branch}\n"
             f"HEAD: {state.current_head}\n"
             f"Possible recovery commits:\n{dangling_commits_text}\n"
-            "Remote sync: Not checked.\n"
+            f"Remote sync: {state.remote_sync.display_text}\n"
         )
 
         QGuiApplication.clipboard().setText(report)

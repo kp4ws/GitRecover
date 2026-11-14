@@ -87,8 +87,7 @@ class RecoveryService:
             context += "Detatched HEAD\n"
 
         context += f"HEAD: {request.state.current_head}\n"
-
-        #TODO remote sync
+        context += f"Remote sync: {request.state.remote_sync.display_text}\n"
 
         #Only check 15 most recent commits for dangling
         max_dangling_check = min(len(request.history.commit_history), 15)
@@ -102,6 +101,8 @@ class RecoveryService:
     def create_recovery_request(self, repo_path: str, progress_callback=None):
         progress_callback(0, "Extracting Git Data...")
         self.active_session = self._create_active_session(repo_path)
+        progress_callback(25, "Checking Remote Sync...")
+        self.active_session.state.remote_sync = extractor.get_remote_sync_info(repo_path)
         progress_callback(40, "Initializing Local LLM...")
         self.llm_provider.load_model()
         

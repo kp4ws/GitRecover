@@ -9,6 +9,47 @@ class RepoStatus(Enum):
     DETACHED = "Detached HEAD"
     DIRTY = "Dirty (Uncommitted Changes)"
 
+class RemoteSyncStatus(Enum):
+    NOT_CHECKED = "Not checked"
+    NO_REMOTE = "No remote configured"
+    NO_UPSTREAM = "No upstream configured"
+    DETACHED = "Detached HEAD"
+    UP_TO_DATE = "Up to date"
+    AHEAD = "Ahead"
+    BEHIND = "Behind"
+    DIVERGED = "Diverged"
+    ERROR = "Check failed"
+
+@dataclass
+class RemoteSyncInfo:
+    status: RemoteSyncStatus = RemoteSyncStatus.NOT_CHECKED
+    upstream: str = ""
+    ahead: int = 0
+    behind: int = 0
+    error_message: str = ""
+
+    @property
+    def display_text(self) -> str:
+        if self.status == RemoteSyncStatus.AHEAD:
+            message = f"Ahead by {self.ahead} commit(s) of {self.upstream}"
+
+        elif self.status == RemoteSyncStatus.BEHIND:
+            message = f"Behind by {self.behind} commit(s) from {self.upstream}"
+
+        elif self.status == RemoteSyncStatus.DIVERGED:
+            message = f"Diverged from {self.upstream}: {self.ahead} ahead, {self.behind} behind"
+
+        elif self.status == RemoteSyncStatus.UP_TO_DATE and self.upstream:
+            message = f"Up to date with {self.upstream}"
+
+        elif self.status == RemoteSyncStatus.ERROR:
+            message = f"*ERROR*: {self.error_message}"
+
+        else: 
+            message = self.status.value
+
+        return message
+
 @dataclass
 class IndexItem:
     mode: str
@@ -37,6 +78,7 @@ class RepositoryState:
     current_head: str = "Unknown"
     current_branch: str = ""
     staging_area: list[IndexItem] = field(default_factory=list)
+    remote_sync: RemoteSyncInfo = field(default_factory=RemoteSyncInfo)
 
     @property
     def is_clean(self) -> bool:
