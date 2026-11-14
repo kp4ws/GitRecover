@@ -18,6 +18,11 @@ class CommitDetails(QDialog):
         
         details = QFormLayout()
         details.addRow("Hash:", self._detail_label(commit.hash))
+
+        if commit.reflog_action:
+            action_type = commit.reflog_action.partition(":")[0].strip()
+            details.addRow("Action:", self._detail_label(action_type, word_wrap=True))
+
         details.addRow("Message:", self._detail_label(commit.message, word_wrap=True))
         details.addRow("Author:", self._detail_label(commit.author))
         details.addRow("Date:", self._detail_label(commit.date))
@@ -36,9 +41,6 @@ class CommitDetails(QDialog):
             details.addRow("Parents:", self._detail_label("\n".join(commit.parents), word_wrap=True))
         else:
             details.addRow("Parents:", self._detail_label("None"))
-
-        if commit.git_action:
-            details.addRow("Git action:", self._detail_label(commit.git_action, word_wrap=True))
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
@@ -69,6 +71,7 @@ class CommitDetails(QDialog):
         
         details = (
             f"Hash: {commit.hash}\n"
+            f"Reflog Action: {commit.reflog_action}\n"
             f"Message: {commit.message}\n"
             f"Author: {commit.author}\n"
             f"Date: {commit.date}\n"
@@ -76,9 +79,6 @@ class CommitDetails(QDialog):
             f"Type: {commit_type}\n"
             f"Parents: {parents}"
         )
-
-        if commit.git_action:
-            details += f"\nGit action: {commit.git_action}"
         
         QGuiApplication.clipboard().setText(details)
         button.setText("Copied")

@@ -1,5 +1,9 @@
 [llm]
-model_path = "GitRecover/models/Llama-3.2-1B-Instruct-Q4_K_M"
-n_ctx = 512
+model_path = "GitRecover/models/Qwen3-4B-Q4_K_M.gguf"
+n_ctx = 2048
 n_threads = 1
 n_batch = 512
+temperature = 0.1
+max_tokens = 256
+frequency_penalty = 0.0
+presence_penalty = 0.0

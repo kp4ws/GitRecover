@@ -68,7 +68,7 @@ The general program pipeline follows these steps:
 2. In the home page of GitRecover, they submit a recovery request.
 3. Behind the scenes, the system extracts relevant data from the .git directory and initializes the LLM.
 4. After the recovery request has been successfully created, a diagnostic report is presented to the user
-5. During an active recovery request session, the user can view the diagnostic results on the home page, view the commit history page, and also chat with the LLM assistant.  
+5. During an active recovery request session, the user can view the diagnostic results on the home page, view the reflog history page, and also chat with the LLM assistant.  
 6. The LLM contains specific instructions to act as a git recovery agent and analyzes the prompt and context, and determines the sequence of steps the user can do to resolve their problem.  
 7. Thus, the user can attempt to fix their problem by utilizes the system resources and chatting with the LLM assistant.  
 

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
 )
 from GitRecover.core.schemas import GitCommit
-from GitRecover.gui.colors import GOOD, BAD, WARNING
+from GitRecover.gui.colors import GOOD, BAD
 from GitRecover.gui.components.commit_details import CommitDetails
 
 class CommitTable(QTableWidget):
@@ -15,15 +15,15 @@ class CommitTable(QTableWidget):
         super().__init__()
 
         self.setColumnCount(7)
-        self.setHorizontalHeaderLabels(["Hash", "Message", "Author", "Date", "Status", "Type", ""])
+        self.setHorizontalHeaderLabels(["Hash", "Action", "Message", "Author", "Date", "Status", ""])
 
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents) #Hash
-        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) #Message
-        self.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents) #Author
-        self.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents) #Date
-        self.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents) #Status
-        self.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents) #Structure
-        self.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents) #Structure Btn
+        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents) #Action
+        self.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) #Message
+        self.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents) #Author
+        self.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents) #Date
+        self.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents) #Status
+        self.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents) #Details button
 
         self.horizontalHeader().setSectionsMovable(True)
         self.horizontalHeader().setMinimumSectionSize(110)
@@ -53,29 +53,21 @@ class CommitTable(QTableWidget):
                 status_text = "Active"
                 status_color = GOOD
 
-            #type column
-            if len(commit.parents) > 1:
-                type_text = "Merge Commit"
-                type_color = WARNING
-            else:
-                type_text = "Regular Commit"
-                type_color = None
-            
+            action_type = commit.reflog_action.partition(":")[0].strip() or "Not recorded"
+            action = QTableWidgetItem(action_type)
+
             self.setItem(row, 0, commit_hash)
-            self.setItem(row, 1, commit_message)
-            self.setItem(row, 2, commit_author)
-            self.setItem(row, 3, commit_date)
+            self.setItem(row, 1, action)
+            self.setItem(row, 2, commit_message)
+            self.setItem(row, 3, commit_author)
+            self.setItem(row, 4, commit_date)
 
-            #Adds coloring to status and type columns
-            self.setCellWidget(row, 4, self._colored_label(status_text, status_color))
-            if type_color:
-                self.setCellWidget(row, 5, self._colored_label(type_text, type_color))
-            else:
-                self.setItem(row, 5, QTableWidgetItem(type_text))
+            #Adds coloring to status column
+            self.setCellWidget(row, 5, self._colored_label(status_text, status_color))
 
-            row_type_btn = QPushButton("Details")
-            row_type_btn.clicked.connect(lambda checked=False, selected_commit=commit: self._on_view_clicked(selected_commit))
-            self.setCellWidget(row, 6, row_type_btn)
+            details_btn = QPushButton("Details")
+            details_btn.clicked.connect(lambda checked=False, selected_commit=commit: self._on_view_clicked(selected_commit))
+            self.setCellWidget(row, 6, details_btn)
 
     def _on_view_clicked(self, commit: GitCommit):
         dialog = CommitDetails(commit, self)

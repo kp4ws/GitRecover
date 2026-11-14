@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QMainWindow, QStackedWidget, QHBoxLayout, QWidget,
 from PySide6.QtCore import Qt
 from GitRecover.services.recovery_service import RecoveryService
 from GitRecover.gui.pages.home_page import HomePage
-from GitRecover.gui.pages.history_page import HistoryPage
+from GitRecover.gui.pages.reflog_page import ReflogPage
 from GitRecover.gui.pages.status_page import StatusPage
 from GitRecover.gui.components.sidebar import Sidebar
 from GitRecover.gui.components.chat_panel import ChatPanel
@@ -23,16 +23,16 @@ class MainWindow(QMainWindow):
 
         self.pages = QStackedWidget()
         self.home_page = HomePage(self, recovery_service)
-        self.history_page = HistoryPage(self, recovery_service)
+        self.reflog_page = ReflogPage(self, recovery_service)
         self.status_page = StatusPage(self, recovery_service)
 
         self.pages.addWidget(self.home_page)
-        self.pages.addWidget(self.history_page)
+        self.pages.addWidget(self.reflog_page)
         self.pages.addWidget(self.status_page)
 
         self.navigation_items = [
             ("Home", 0),
-            ("History", 1),
+            ("Reflog History", 1),
             # ("Status", 2), #Leaving Status Page out of application for now
         ]
 

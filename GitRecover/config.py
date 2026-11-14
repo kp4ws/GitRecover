@@ -4,7 +4,7 @@ import tomllib
 from pathlib import Path
 
 PACKAGE_DIR = Path(__file__).resolve().parent
-DEFAULT_MODEL_PATH = PACKAGE_DIR / "models" / "Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+DEFAULT_MODEL_PATH = PACKAGE_DIR / "models" / "Qwen3-4B-Q4_K_M.gguf"
 CONFIG_PATH = Path(__file__).parent / "config.toml"
 
 #Assumes config.toml exists, no current error handling if missing

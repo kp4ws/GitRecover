@@ -148,9 +148,9 @@ class RecoveryReport(QDialog):
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
 
-        history_button = buttons.addButton("View History", QDialogButtonBox.ButtonRole.ActionRole)
-        history_button.setEnabled(bool(request.history.commit_history))
-        history_button.clicked.connect(self._view_history)
+        reflogs_button = buttons.addButton("View Reflogs", QDialogButtonBox.ButtonRole.ActionRole)
+        reflogs_button.setEnabled(bool(request.history.commit_history))
+        reflogs_button.clicked.connect(self._view_history)
         
         copy_button = buttons.addButton("Copy Report", QDialogButtonBox.ButtonRole.ActionRole,)
         copy_button.clicked.connect(lambda: self._copy_report(copy_button))

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from GitRecover.gui.window import MainWindow
     from GitRecover.services.recovery_service import RecoveryService
 
-class HistoryPage(Page):
+class ReflogPage(Page):
     def __init__(self, root: MainWindow, recovery_service: RecoveryService):
         super().__init__(root, recovery_service)
 
@@ -29,9 +29,9 @@ class HistoryPage(Page):
     def _create_widgets(self) -> QVBoxLayout:
         layout = QVBoxLayout()
 
-        page_title = QLabel("History")
+        page_title = QLabel("Reflog History")
         page_title.setStyleSheet("font-size: 26px; font-weight: bold;")
-        page_subtitle = QLabel("Displays Git commit history")
+        page_subtitle = QLabel("Displays git reflog history")
         page_subtitle.setStyleSheet("color: gray; margin-bottom: 10px;")
 
         layout.addWidget(page_title)

@@ -61,7 +61,7 @@ class RecoveryService:
                 date=commit["date"],
                 parents=commit["parents"],
                 is_dangling=commit["is_dangling"],
-                git_action=commit["git_action"],
+                reflog_action=commit["reflog_action"],
             ))
         
         repo_history = RepositoryHistory(
@@ -128,7 +128,6 @@ class RecoveryService:
         chat_history.append({"role": "user", "content": user_message})
         chat_history.append({"role": "assistant", "content": ai_response})
 
-        #TODO create filtering mechanism where if AI response certainty is low, system forces it to retry up to N times
         if progress_callback is not None:
             progress_callback(100, "AI response ready.")
         return ai_response

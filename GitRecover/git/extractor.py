@@ -181,7 +181,7 @@ def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
         "%an", #author
         "%ad", #date
         "%s", #message
-        "%gs", #git action
+        "%gs", #reflog action
     ]
 
     #We use null delimiter to join the fields (so that it doesn't appear in git command)
@@ -198,7 +198,7 @@ def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
                 author = record_fields[2]
                 date = record_fields[3]
                 message = record_fields[4]
-                git_action = record_fields[5]
+                reflog_action = record_fields[5]
 
                 parents = []
                 if parent_hashes:
@@ -210,7 +210,7 @@ def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
                     "author": author,
                     "date": date,
                     "message": message,
-                    "git_action": git_action,
+                    "reflog_action": reflog_action,
                     "is_dangling": commit_hash in dangling_set
                 })
 
