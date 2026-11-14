@@ -2,23 +2,35 @@
 This project provides a desktop GUI application to assist users in resolving any git-related issues in their projects. 
 
 Common Git issues that users may run into include the following:
-- Lost work, due to a `git reset --hard`
-- Merge conflict confusion
-- Accidental branch deletions
+- Direct commit to main
+- Merge conflicts
+- Bad merges
+- Unmerged branch deletion
+- Lost work from hard reset
+- Lost uncommitted staged files
+- Dropped stash
+- Messed up rebase
+- Detached HEAD mistakes  
+
+Each of these issues are described in further detail within the [scenario tests README](tests/scenarios/README.md), along with corresponding scripts to generate each of the scenarios.  
 
 ## Repository Structure
 - `GitRecover/`: The package directory, containing the source code of the application.  
-    - `ai`: Subpackage for LLM-related code.    
-    - `git`: Subpackage for Git-related functionality.    
-    - `gui`: Subpackage for the user interface.  
-    - `services`: Subpackage for app services.  
-    - `workers`: Subpackage for background workers.  
+    - `ai/`: Subpackage for LLM-related code.  
+    - `core/`: Subpackage containing schemas and data structures for the application.  
+    - `git/`: Subpackage for Git-related functionality.    
+    - `gui/`: Subpackage for the user interface.  
+        - `pages/`: Subpackage for pages of the application.  
+        - `components/`: Subpackage for reusable UI components.
+    - `models/`: Directory for storing LLMs (.gguf).  
+    - `services/`: Subpackage for app services.  
+    - `workers/`: Subpackage for background workers.  
     - `config.toml`: Configuration file for the app.  
     - `config.py`: Module for loading and managing the configuration file.  
     - `main.py`:  Entry point of the application. Instantiates the GUI and injects dependencies.  
     - `utils.py`: Utility module containing helper functions for the application.     
 - `run.py`: Script at the project root for launching or building the application.  
-- `tests/`: The tests directory, containing all of the use case scenarios for evaluating and testing the system.
+- `tests/scenarios/`: The tests directory, containing all of the use case scenarios for evaluating and testing the system.
 
 ## Setup & Installation
 **Create a Virutal Environment:**  
@@ -53,34 +65,26 @@ config.toml contains the default configuration for the program, specifically the
 ## Program Pipeline
 The general program pipeline follows these steps:  
 1. The user encounters a problem in their git repo so they run GitRecover software.
-2. In the console window of GitRecover, they enter a prompt and submit a recovery request.
-3. Behind the scenes, the system collects relevant data from the .git directory and extracts it into a JSON payload.
-4. The payload is sent off to the local LLM for inference.
-5. The LLM contains specific instructions to act as a git recovery agent and analyzes the JSON payload, and determines the sequence of steps the user can do to resolve their problem.
-6. Once LLM response is complete, it's sent back, filtered, and presented to the user.
-7. Using the sequence of steps, the user can attempt to fix their problem or continue prompting the system for more help.
-
-## Program I/O
-### Inputs:
-- Absolute path to the target Git Repository.
-- User prompt, describing the issue.
-
-### Outputs:
-- Sequence of steps to help resolve the user's issue.
-
+2. In the home page of GitRecover, they submit a recovery request.
+3. Behind the scenes, the system extracts relevant data from the .git directory and initializes the LLM.
+4. After the recovery request has been successfully created, a diagnostic report is presented to the user
+5. During an active recovery request session, the user can view the diagnostic results on the home page, view the commit history page, and also chat with the LLM assistant.  
+6. The LLM contains specific instructions to act as a git recovery agent and analyzes the prompt and context, and determines the sequence of steps the user can do to resolve their problem.  
+7. Thus, the user can attempt to fix their problem by utilizes the system resources and chatting with the LLM assistant.  
 
 ## Local LLM Models
-By default, the program is configured to use **Qwen3-4B-Q4_K_M.gguf** retrieved from HuggingFace in `.gguf` format.
+By default, the program is configured to use **Llama-3.2-1B-Instruct-Q4_K_M.gguf** retrieved from HuggingFace in `.gguf` format.
 
-### Loading a new model
-To use a different model:
+### Loading a new LLM
+To load a model into the system, do the following:  
 1. Download a `.gguf model` from HuggingFace.
 2. Place the file inside the `GitRecover/models/` directory.
 3. Open `config.toml` and adjust the LLM settings accordingly (specifically the model_path to point to the new filename).
 
 ## Troubleshooting & Known Issues
 - **Missing Model:** The application will fail to generate responses if a valid .gguf model is not supplied in the designated models directory.
-- **Inference Delay:** Because the AI runs entirely locally on CPU/RAM, generating a response may take some time.
+- **Inference Delay:** Because the AI runs entirely locally on CPU/RAM, generating a response may take some time.  
+- **OS Security Blocking LLM:** Sometimes the OS will block the LLM from running. One fix includes running `pip install --force-reinstall --no-cache-dir llama-cpp-python` to reinstall the llama-cpp-python library.
 
 ## Stretch Goals / Ideas
-- Helper utility to help with git cherrypicking
+- Helper utility to help with git cherrypicking and dynamically selecting / modifying specific git commit(s)
