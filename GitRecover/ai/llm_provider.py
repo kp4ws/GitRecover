@@ -31,6 +31,9 @@ class LLMProvider:
         self.model = None
 
     def load_model(self):
+        if self.model:
+            #if model is already loaded, return
+            return
         try:
             from llama_cpp import Llama
 
