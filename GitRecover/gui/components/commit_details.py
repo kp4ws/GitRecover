@@ -20,8 +20,7 @@ class CommitDetails(QDialog):
         details.addRow("Hash:", self._detail_label(commit.hash))
 
         if commit.reflog_action:
-            action_type = commit.reflog_action.partition(":")[0].strip()
-            details.addRow("Action:", self._detail_label(action_type, word_wrap=True))
+            details.addRow("Action:", self._detail_label(commit.reflog_action, word_wrap=True))
 
         details.addRow("Message:", self._detail_label(commit.message, word_wrap=True))
         details.addRow("Author:", self._detail_label(commit.author))
