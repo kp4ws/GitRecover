@@ -42,7 +42,8 @@ class LLMProvider:
                 verbose=False,
             )
         except Exception as e:
-             raise RuntimeError(f"Cannot initialize local LLM. Check model path.\n Details: {e}")
+            print(f"ERROR: Not able to load model {e}\n Please try again.")
+            #  raise RuntimeError(f"Cannot initialize local LLM. Check model path.\n Details: {e}")
 
     def generate_response(self, chat_history: list[dict], context: str) -> str:
         if self.model is None:

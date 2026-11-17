@@ -57,6 +57,12 @@ class ChatPanel(QWidget):
         )
 
     def send_message(self):
+        if not self.recovery_service.llm_provider.model:
+            #TODO: If time permits, add alerts into the system
+            print("Model not active, returning from sending message")
+            self.input.clear()
+            return
+        
         text = self.input.text().strip()
 
         self.add_message("You", text)
