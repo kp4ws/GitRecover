@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+schemas.py defines data structures used to represent Git state and recovery sessions.
+"""
+
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -30,6 +35,11 @@ class RemoteSyncInfo:
 
     @property
     def display_text(self) -> str:
+        """Format remote synchronization information for display.
+
+        Returns:
+            A human-readable status string.
+        """
         if self.status == RemoteSyncStatus.AHEAD:
             message = f"Ahead by {self.ahead} commit(s) of {self.upstream}"
 
@@ -59,7 +69,7 @@ class IndexItem:
 
     @property
     def is_conflict(self) -> bool:
-        '''stage > 0 => active merge conflict'''
+        """Return whether this index entry represents an active conflict."""
         return self.stage > 0
 
 @dataclass
@@ -82,6 +92,7 @@ class RepositoryState:
 
     @property
     def is_clean(self) -> bool:
+        """Return whether the repository status is clean."""
         return self.status == RepoStatus.CLEAN
 
 @dataclass

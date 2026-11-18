@@ -1,4 +1,7 @@
-#TODO: Should config.toml be in package directory or root directory?
+"""
+Author: Kent Pawson
+config.py loads the application settings and resolves the local model path.
+"""
 
 import tomllib
 from pathlib import Path

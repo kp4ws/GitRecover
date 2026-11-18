@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+main.py initializes the application, dependencies, and main window.
+"""
+
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QThreadPool
@@ -7,6 +12,7 @@ from GitRecover.ai.llm_provider import LLMProvider
 from qt_material import apply_stylesheet
 
 def main():
+    """Start the Qt application and enter the event loop."""
     app = QApplication(sys.argv)
     
     QThreadPool.globalInstance().setMaxThreadCount(1)

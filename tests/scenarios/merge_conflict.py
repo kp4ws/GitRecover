@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+merge_conflict.py creates an active merge-conflict scenario.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     commit,
@@ -7,6 +12,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the merge-conflict scenario."""
     setup_repo()
 
     print("Creating initial commit...")

@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+commit_details.py shows detailed commit information in a dialog.
+"""
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
@@ -12,6 +17,12 @@ from GitRecover.core.schemas import GitCommit
 
 class CommitDetails(QDialog):
     def __init__(self, commit: GitCommit, parent=None):
+        """Initialize the commit-details dialog.
+
+        Parameters:
+            commit: Commit to display.
+            parent: Optional parent widget.
+        """
         super().__init__(parent)
         self.setWindowTitle("Commit Details")          
         self.setMinimumWidth(500)
@@ -52,6 +63,12 @@ class CommitDetails(QDialog):
         layout.addWidget(buttons)
 
     def _copy_commit_details(self, commit: GitCommit, button: QPushButton) -> None:
+        """Copy commit details to the clipboard.
+
+        Parameters:
+            commit: Commit to copy.
+            button: Button used to trigger the action.
+        """
         #TODO this functionality is repeated, consider refactoring code to make this cleaner
         if commit.is_dangling:
             status = "Dangling"
@@ -83,6 +100,15 @@ class CommitDetails(QDialog):
         button.setText("Copied")
 
     def _detail_label(self, text: str, word_wrap: bool = False) -> QLabel:
+        """Create a selectable detail label.
+
+        Parameters:
+            text: Label text.
+            word_wrap: Whether text should wrap.
+
+        Returns:
+            The configured label.
+        """
         label = QLabel(text)
         label.setWordWrap(word_wrap)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)

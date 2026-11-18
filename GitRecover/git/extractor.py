@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+extractor.py contains functions used to interact directly with the hidden .git directory of the project repository.
+"""
+
 import os
 import subprocess
 from pathlib import Path
@@ -5,6 +10,14 @@ from GitRecover.utils import run_cmd
 from GitRecover.core.schemas import RemoteSyncInfo, RemoteSyncStatus, RepoStatus
 
 def get_repo_status(repo_path: str) -> RepoStatus:
+    """Get the current repository status.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        The detected repository status.
+    """
     git_dir = Path(repo_path) / ".git"
 
     #Check for ongoing operations
@@ -29,6 +42,14 @@ def get_repo_status(repo_path: str) -> RepoStatus:
     return RepoStatus.CLEAN
 
 def get_current_head(repo_path: str) -> str:
+    """Get the full hash of the current HEAD.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        The HEAD hash or "Unknown".
+    """
     result = run_cmd("git", "rev-parse", "HEAD", cwd=repo_path)
 
     if result:
@@ -38,6 +59,14 @@ def get_current_head(repo_path: str) -> str:
     return "Unknown"
 
 def get_current_branch(repo_path: str) -> str:
+    """Get the name of the checked-out branch.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        The branch name or an empty string for detached HEAD.
+    """
     result = run_cmd("git", "symbolic-ref", "--short", "-q", "HEAD", cwd=repo_path)
     if result:
         return result.strip()
@@ -46,6 +75,15 @@ def get_current_branch(repo_path: str) -> str:
     return ""
 
 def _run_remote_cmd(repo_path: str, *args: str) -> subprocess.CompletedProcess:
+    """Run a Git command for remote sync checks.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+        *args: Git command and arguments.
+
+    Returns:
+        The completed process or an error process code.
+    """
     environment = os.environ.copy()
     #prevents Git from waiting on terminal input
     environment["GIT_TERMINAL_PROMPT"] = "0"
@@ -68,6 +106,14 @@ def _run_remote_cmd(repo_path: str, *args: str) -> subprocess.CompletedProcess:
     return result
 
 def get_remote_sync_info(repo_path: str) -> RemoteSyncInfo:
+    """Check remote tracking and ahead/behind status.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        Remote synchronization information.
+    """
     #If in detached head state, then return detached sync status
     if not get_current_branch(repo_path):
         return RemoteSyncInfo(
@@ -171,7 +217,15 @@ def get_remote_sync_info(repo_path: str) -> RemoteSyncInfo:
     )
 
 def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
-    '''commits including those not part of commit tree (orphaned commits found via reflog)'''
+    """Get recent commits, including orphaned commits found in the reflog.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+        max_count: Maximum number of reflog entries to read.
+
+    Returns:
+        A list of commit details.
+    """
 
     dangling_set = get_dangling_commit_set(repo_path)
 
@@ -217,6 +271,14 @@ def get_recent_commits(repo_path: str, max_count: int = 30) -> list[dict]:
     return commits
 
 def get_dangling_commit_set(repo_path: str) -> set[str]:
+    """Find commit hashes reported as dangling by Git.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        A set of dangling commit hashes.
+    """
     #Check for dangling commits
     result = run_cmd("git", "fsck", "--lost-found", cwd=repo_path).strip()
     if not result:
@@ -232,10 +294,25 @@ def get_dangling_commit_set(repo_path: str) -> set[str]:
     return dangling_commits
 
 def get_unpushed_commits(repo_path: str) -> str:
-    '''Returns commits that haven't been pushed upstream yet'''
+    """Get commits that have not been pushed upstream.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        Git cherry output for unpushed commits.
+    """
     return run_cmd("git", "cherry", "-v", cwd=repo_path)
 
 def get_refs(repo_path: str) -> str:
+    """Get repository references.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        A mapping of reference names to commit hashes.
+    """
     result = run_cmd("git", "for-each-ref", cwd=repo_path)
 
     #Clean up result and strip away any formatting
@@ -248,7 +325,14 @@ def get_refs(repo_path: str) -> str:
     return refs
 
 def get_staging_area(repo_path: str) -> list[dict]:
-    '''Gets index/staging area'''
+    """Get entries in the repository staging area.
+
+    Parameters:
+        repo_path: Path to the Git repository.
+
+    Returns:
+        A list of staged index entries.
+    """
     result = run_cmd("git", "ls-files", "-s", cwd=repo_path)
     if not result:
         return []

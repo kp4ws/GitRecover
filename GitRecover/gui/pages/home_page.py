@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+home_page.py provides repository setup and health controls.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -17,11 +22,18 @@ if TYPE_CHECKING:
 
 class HomePage(Page):
     def __init__(self, root: MainWindow, recovery_service: RecoveryService):
+        """Initialize the home page.
+
+        Parameters:
+            root: Main application window.
+            recovery_service: Shared recovery service.
+        """
         super().__init__(root, recovery_service)
         self.main_layout = self._create_widgets()
         self.setLayout(self.main_layout)
 
     def refresh_UI(self):
+        """Refresh repository health and session information."""
         if self.recovery_service.active_session is None:
             self.session.setText("No Active Session")
             self.repo_path.setText("")
@@ -93,6 +105,11 @@ class HomePage(Page):
             self.active_request_card.show()
     
     def _create_widgets(self) -> QVBoxLayout:
+        """Create and arrange the home-page widgets.
+
+        Returns:
+            The configured page layout.
+        """
         layout = QVBoxLayout()
 
         page_title = QLabel("Home")
@@ -162,6 +179,11 @@ class HomePage(Page):
         return layout
 
     def _handle_recovery_create(self, repo_path: str):
+        """Start creation of a recovery request.
+
+        Parameters:
+            repo_path: Path to the selected repository.
+        """
         self.root.perform_background_task (
             fn=self.recovery_service.create_recovery_request, 
             on_success=self._on_request_created,
@@ -172,6 +194,11 @@ class HomePage(Page):
         )
 
     def _on_request_created(self, result):
+        """Refresh the UI and show the recovery report.
+
+        Parameters:
+            result: Recovery request creation result.
+        """
         request = result or self.recovery_service.active_session
         if request is None:
             print("Warning: Recovery Request returning null")

@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+committed_to_main.py creates a scenario for a commit accidentally made on main.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     commit,
@@ -5,6 +10,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the committed-to-main scenario."""
     setup_repo()
 
     print("Creating initial commit on main...")

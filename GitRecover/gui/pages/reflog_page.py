@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+reflog_page.py displays commit and reflog history.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -12,6 +17,7 @@ if TYPE_CHECKING:
 
 class ReflogPage(Page):
     def __init__(self, root: MainWindow, recovery_service: RecoveryService):
+        """Initialize the reflog history page."""
         super().__init__(root, recovery_service)
 
         self.commit_table = CommitTable()
@@ -20,6 +26,7 @@ class ReflogPage(Page):
         self.setLayout(self.main_layout)
 
     def refresh_UI(self):
+        """Refresh the commit table from the active session."""
         if self.recovery_service.active_session is None:
             self.commit_table.setRowCount(0)
         else:
@@ -27,6 +34,11 @@ class ReflogPage(Page):
             self.commit_table.refresh_data(commit_history)
 
     def _create_widgets(self) -> QVBoxLayout:
+        """Create and arrange the reflog page widgets.
+
+        Returns:
+            The configured page layout.
+        """
         layout = QVBoxLayout()
 
         page_title = QLabel("Reflog History")

@@ -1,0 +1,1 @@
+"""GitRecover application package."""

@@ -1,0 +1,1 @@
+"""Git repository extraction and inspection utilities."""

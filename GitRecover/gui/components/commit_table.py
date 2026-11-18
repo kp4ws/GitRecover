@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+commit_table.py displays repository commit and reflog history.
+"""
+
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -12,6 +17,7 @@ from GitRecover.gui.components.commit_details import CommitDetails
 
 class CommitTable(QTableWidget):
     def __init__(self):
+        """Initialize the commit history table."""
         super().__init__()
 
         self.setColumnCount(7)
@@ -37,6 +43,11 @@ class CommitTable(QTableWidget):
         self.setAlternatingRowColors(True)
 
     def refresh_data(self, commits: list[GitCommit]):
+        """Populate the table with commit history.
+
+        Parameters:
+            commits: Commits to display.
+        """
         self.setRowCount(len(commits))
 
         for row, commit in enumerate(commits):
@@ -70,10 +81,24 @@ class CommitTable(QTableWidget):
             self.setCellWidget(row, 6, details_btn)
 
     def _on_view_clicked(self, commit: GitCommit):
+        """Open the details dialog for a commit.
+
+        Parameters:
+            commit: Selected commit.
+        """
         dialog = CommitDetails(commit, self)
         dialog.exec()
 
     def _colored_label(self, text: str, color: str) -> QLabel:
+        """Create a colored status label.
+
+        Parameters:
+            text: Label text.
+            color: CSS color value.
+
+        Returns:
+            The configured label.
+        """
         label = QLabel(text)
         label.setStyleSheet(f"color: {color}; background: transparent;")
         return label

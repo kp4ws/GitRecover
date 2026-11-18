@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+bad_merge.py creates a merge scenario where incorrect changes are committed.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     write_to_file,
@@ -8,6 +13,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the bad-merge scenario."""
     setup_repo()
 
     print("Creating Initial commit...")

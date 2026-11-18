@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+dropped_stash.py creates a scenario for a stash that is no longer reachable.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     commit, 
@@ -7,6 +12,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the dropped-stash scenario."""
     setup_repo()
 
     print("Creating initial commit ...")

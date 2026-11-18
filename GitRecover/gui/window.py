@@ -1,10 +1,14 @@
+"""
+Author: Kent Pawson
+window.py defines the application's main window and page navigation.
+"""
+
 from __future__ import annotations
 from PySide6.QtWidgets import QMainWindow, QStackedWidget, QHBoxLayout, QWidget, QSplitter
 from PySide6.QtCore import Qt
 from GitRecover.services.recovery_service import RecoveryService
 from GitRecover.gui.pages.home_page import HomePage
 from GitRecover.gui.pages.reflog_page import ReflogPage
-from GitRecover.gui.pages.status_page import StatusPage
 from GitRecover.gui.components.sidebar import Sidebar
 from GitRecover.gui.components.chat_panel import ChatPanel
 from PySide6.QtCore import QThreadPool
@@ -17,6 +21,11 @@ if TYPE_CHECKING:
 
 class MainWindow(QMainWindow):
     def __init__(self, recovery_service: RecoveryService):
+        """Initialize the main window.
+
+        Parameters:
+            recovery_service: Service used by the application pages.
+        """
         super().__init__()
         self.setWindowTitle("Git Recover v.0.1.0")
         self.resize(1600, 900)
@@ -24,16 +33,13 @@ class MainWindow(QMainWindow):
         self.pages = QStackedWidget()
         self.home_page = HomePage(self, recovery_service)
         self.reflog_page = ReflogPage(self, recovery_service)
-        self.status_page = StatusPage(self, recovery_service)
 
         self.pages.addWidget(self.home_page)
         self.pages.addWidget(self.reflog_page)
-        self.pages.addWidget(self.status_page)
 
         self.navigation_items = [
             ("Home", 0),
             ("Reflog History", 1),
-            # ("Status", 2), #Leaving Status Page out of application for now
         ]
 
         self.main_widget = self._create_main_widget(recovery_service)
@@ -44,6 +50,14 @@ class MainWindow(QMainWindow):
         self.navigate_to(0)
 
     def _create_main_widget(self, recovery_service: RecoveryService) -> QWidget:
+        """Create the sidebar, page stack, and chat panel layout.
+
+        Parameters:
+            recovery_service: Service used by the chat panel and pages.
+
+        Returns:
+            The main application widget.
+        """
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -68,9 +82,19 @@ class MainWindow(QMainWindow):
         return widget
 
     def navigate_to(self, page_index: int):
+        """Switch to a page by stack index.
+
+        Parameters:
+            page_index: Index of the page to display.
+        """
         self.pages.setCurrentIndex(page_index)
 
     def notify_UI_refresh(self, active_session=False):
+        """Refresh all pages and update chat-panel availability.
+
+        Parameters:
+            active_session: Whether a recovery session is active.
+        """
         if active_session:
             self.chat_panel.setEnabled(True)
         else:
@@ -81,6 +105,18 @@ class MainWindow(QMainWindow):
             page.refresh_UI()
 
     def perform_background_task(self, fn, on_success=None, on_error=None, title="Processing...", text="", show_progress=True, *args, **kwargs):
+        """Run a function in the Qt thread pool.
+
+        Parameters:
+            fn: Function to execute.
+            on_success: Optional result callback.
+            on_error: Optional error callback.
+            title: Progress-dialog title.
+            text: Progress-dialog text.
+            show_progress: Whether to show a progress dialog.
+            *args: Positional arguments for the function.
+            **kwargs: Keyword arguments for the function.
+        """
         if show_progress:
             progress_dialog = ProgressDialog(title=title, text=text, parent=self)
             progress_dialog.show()
@@ -106,6 +142,7 @@ class MainWindow(QMainWindow):
         QThreadPool.globalInstance().start(worker)
 
     def _apply_styles(self):
+        """Apply main-window-specific styles."""
         self.setStyleSheet("""
             QFrame#sidebar {
                 border-right: 1px solid palette(mid);

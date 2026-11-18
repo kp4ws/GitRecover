@@ -1,4 +1,7 @@
 """
+Author: Kent Pawson
+recovery_service.py Contains RecoveryService which is in charge of creating recovery sessions and coordinating data flow between the view, git directory, and the local LLM.
+
 Porcelain commands: The regular git commands that are used
 Plumbing commands: The low level git commands that may be used behind the scenes
 
@@ -34,10 +37,23 @@ from GitRecover.core.schemas import GitCommit, RecoveryRequest, RepositoryHistor
 
 class RecoveryService:
     def __init__(self, llm_provider):
+        """Initialize the service with an LLM provider.
+
+        Parameters:
+            llm_provider: Provider used to generate recovery responses.
+        """
         self.llm_provider: LLMProvider = llm_provider
         self.active_session: RecoveryRequest | None = None
     
     def _create_active_session(self, repo_path: str) -> RecoveryRequest:
+        """Create an active recovery request for a repository.
+
+        Parameters:
+            repo_path: Path to the Git repository.
+
+        Returns:
+            A recovery request containing repository state and history.
+        """
         current_head: str = extractor.get_current_head(repo_path)
         current_branch: str = extractor.get_current_branch(repo_path)
         repo_status = extractor.get_repo_status(repo_path)
@@ -78,6 +94,14 @@ class RecoveryService:
         return request
 
     def _prepare_recovery_context(self, request: RecoveryRequest) -> str:
+        """Format repository information for the language model.
+
+        Parameters:
+            request: Active recovery request.
+
+        Returns:
+            Human-readable repository context.
+        """
         context = f"Repository: {request.repo_path}\n"
         context += f"Status: {request.state.status.value}\n"
 
@@ -99,6 +123,12 @@ class RecoveryService:
         return context
 
     def create_recovery_request(self, repo_path: str, progress_callback=None):
+        """Initialize a recovery session for a repository.
+
+        Parameters:
+            repo_path: Path to the Git repository.
+            progress_callback: Optional callback for progress updates.
+        """
         progress_callback(0, "Extracting Git Data...")
         self.active_session = self._create_active_session(repo_path)
         progress_callback(25, "Checking Remote Sync...")
@@ -108,10 +138,16 @@ class RecoveryService:
         
         progress_callback(100, "Recovery Request Active")
         
-    def generate_diagnostic_suggestion():
-        pass #TODO if time permits, this function could be used to generate an AI suggestion for recovery request report
-
     def handle_chat_message(self, user_message: str, progress_callback=None):
+        """Send a chat message and return the model's response.
+
+        Parameters:
+            user_message: Message from the user.
+            progress_callback: Optional callback for progress updates.
+
+        Returns:
+            The assistant response or an error message.
+        """
         if not self.active_session:
             return "Error: No active Git recovery session."
 

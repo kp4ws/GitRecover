@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+llm_provider.py manages loading the local language model and generating chat responses.
+"""
+
 from GitRecover.config import llm
 import re
 
@@ -27,10 +32,11 @@ SYSTEM_PROMPT = (
 
 class LLMProvider:
     def __init__(self):
-        '''Only load model on first use, not in constructor'''
+        """Initialize the provider without loading the model."""
         self.model = None
 
     def load_model(self):
+        """Load the configured local model when it is not already active."""
         if self.model:
             #if model is already loaded, return
             return
@@ -49,8 +55,16 @@ class LLMProvider:
             #  raise RuntimeError(f"Cannot initialize local LLM. Check model path.\n Details: {e}")
 
     def generate_response(self, chat_history: list[dict], context: str) -> str:
+        """Generate a recovery response for a chat history and repository context.
+
+        Parameters:
+            chat_history: Recent chat messages.
+            context: Repository state formatted for the model.
+
+        Returns:
+            The filtered response text.
+        """
         if self.model is None:
-            '''This will be true on first use, where model is first loaded'''
             self.load_model()
 
         #System Prompt combined with repository context
@@ -80,6 +94,14 @@ class LLMProvider:
         return filtered_response.strip()
 
     def _filter_response(self, unfiltered_response: str):
+        """Remove unsupported formatting and reasoning tags from model output.
+
+        Parameters:
+            unfiltered_response: Raw model response.
+
+        Returns:
+            Plain-text response content.
+        """
         #Remove reasoning tags from response
         filtered_text = re.sub(
             r"<think>.*?(?:</think>|$)",

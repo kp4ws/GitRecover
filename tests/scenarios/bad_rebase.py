@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+bad_rebase.py creates a scenario for a rebase interrupted or completed incorrectly.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     commit,
@@ -6,6 +11,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the bad-rebase scenario."""
     setup_repo()
 
     print("Creating Initial commit...")

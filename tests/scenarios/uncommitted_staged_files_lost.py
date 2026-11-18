@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+uncommitted_staged_files_lost.py creates a scenario for losing staged uncommitted files.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     commit, 
@@ -7,6 +12,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the lost-staged-files scenario."""
     setup_repo()
 
     print("Creating initial commit ...")

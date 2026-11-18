@@ -1,4 +1,7 @@
-#This file is used to bridge the gap for absolute imports with PyInstaller
+"""
+Author: Kent Pawson
+run.py bridges absolute imports for the PyInstaller build and starts the application.
+"""
 
 from GitRecover.main import main
 

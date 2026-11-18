@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+recovery_report.py summarizes repository status and recovery candidates.
+"""
+
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
@@ -21,6 +26,12 @@ class RecoveryReport(QDialog):
     view_history_event = Signal()
 
     def __init__(self, request: RecoveryRequest, parent=None):
+        """Initialize the recovery report dialog.
+
+        Parameters:
+            request: Recovery request being reported.
+            parent: Optional parent widget.
+        """
         super().__init__(parent)
         self.setWindowTitle("Recovery Report")
         self.setMinimumWidth(520)
@@ -162,11 +173,17 @@ class RecoveryReport(QDialog):
         layout.addWidget(buttons)
 
     def _view_history(self) -> None:
+        """Navigate to the history page and close the report."""
         self.view_history_event.emit()
         #Auto close form when going to history page
         self.accept()
 
     def _copy_report(self, button: QPushButton) -> None:
+        """Copy the recovery report to the clipboard.
+
+        Parameters:
+            button: Button used to trigger the action.
+        """
         state = self.request.state
 
         dangling_commits_text = ""
@@ -196,6 +213,15 @@ class RecoveryReport(QDialog):
         button.setText("Copied")
 
     def _detail_label(self, text: str, word_wrap: bool = False) -> QLabel:
+        """Create a selectable report-detail label.
+
+        Parameters:
+            text: Label text.
+            word_wrap: Whether text should wrap.
+
+        Returns:
+            The configured label.
+        """
         label = QLabel(text)
         label.setWordWrap(word_wrap)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)

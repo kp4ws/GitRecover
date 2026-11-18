@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+sidebar.py provides the application's navigation sidebar.
+"""
+
 from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import Signal
 
@@ -5,11 +10,23 @@ class Sidebar(QFrame):
     navigation_requested = Signal(int)
 
     def __init__(self, navigation_items: list[tuple[str, int]], title: str = "GitRecover"):
+        """Initialize the navigation sidebar.
+
+        Parameters:
+            navigation_items: Navigation labels and page indexes.
+            title: Sidebar title.
+        """
         super().__init__()
         self._create_widgets(navigation_items, title)
         self._apply_styles()
 
     def _create_widgets(self, navigation_items: list[tuple[str, int]], title: str):
+        """Create sidebar title and navigation buttons.
+
+        Parameters:
+            navigation_items: Navigation labels and page indexes.
+            title: Sidebar title.
+        """
         self.setObjectName("sidebar")
         self.setFixedWidth(210)
 
@@ -31,6 +48,7 @@ class Sidebar(QFrame):
         layout.addStretch()
 
     def _apply_styles(self):
+        """Apply sidebar-specific styles."""
         self.setStyleSheet("""
             QFrame#sidebar {
                 border-right: 1px solid palette(mid);

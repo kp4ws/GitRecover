@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+chat_panel.py provides the UI component for chatting with the llm assistant.
+"""
+
 from __future__ import annotations
 
 from PySide6.QtCore import QThreadPool
@@ -19,12 +24,19 @@ if TYPE_CHECKING:
 
 class ChatPanel(QWidget):
     def __init__(self, recovery_service, parent=None):
+        """Initialize the chat panel.
+
+        Parameters:
+            recovery_service: Service used to send chat messages.
+            parent: Optional parent widget.
+        """
         super().__init__(parent)
         self.root: MainWindow = parent
         self.recovery_service = recovery_service
         self._create_widgets()
 
     def _create_widgets(self):
+        """Create the chat message and input widgets."""
         layout = QVBoxLayout(self)
         panel_title = QLabel("Assistant")
         panel_title.setStyleSheet("color: gray;")
@@ -49,6 +61,12 @@ class ChatPanel(QWidget):
         layout.addLayout(input_layout)
 
     def add_message(self, sender: str, text: str):
+        """Append a formatted message to the chat history.
+
+        Parameters:
+            sender: Name displayed for the message sender.
+            text: Message content.
+        """
         #Add spacing into the messages 
         html_text = text.replace('\n', '<br>')
         
@@ -57,6 +75,7 @@ class ChatPanel(QWidget):
         )
 
     def send_message(self):
+        """Send the current input text in the background."""
         if not self.recovery_service.llm_provider.model:
             #TODO: If time permits, add alerts into the system
             print("Model not active, returning from sending message")
@@ -82,14 +101,25 @@ class ChatPanel(QWidget):
         )
 
     def on_llm_response(self, reply: str):
+        """Display a model response and re-enable chat input.
+
+        Parameters:
+            reply: Assistant response text.
+        """
         self.add_message("Assistant", reply)
         self._reset_inputs()
 
     def on_llm_error(self, error_msg):
+        """Display a model error and re-enable chat input.
+
+        Parameters:
+            error_msg: Error description.
+        """
         self.add_message("System", f"Error occurred: {error_msg}")
         self._reset_inputs()
 
     def _reset_inputs(self):
+        """Re-enable chat controls after a background response."""
         self.input.setEnabled(True)
         self.send_button.setEnabled(True)
         self.input.setFocus()

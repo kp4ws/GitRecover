@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+hard_reset.py creates a scenario for work lost by a hard reset.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     commit, 
@@ -6,6 +11,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the hard-reset scenario."""
     setup_repo()
 
     print("Creating initial commit ...")

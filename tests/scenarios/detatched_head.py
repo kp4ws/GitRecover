@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+detatched_head.py creates a scenario for work performed while HEAD is detached.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     run_scenario_cmd,
@@ -6,6 +11,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the detached-HEAD scenario."""
     setup_repo()
 
     print("Creating initial commits on main...")

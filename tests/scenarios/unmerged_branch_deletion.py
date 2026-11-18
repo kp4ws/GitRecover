@@ -1,3 +1,8 @@
+"""
+Author: Kent Pawson
+unmerged_branch_deletion.py creates a scenario for deleting an unmerged branch.
+"""
+
 from tests.scenarios.scenario_base import (
     setup_repo,
     commit,
@@ -6,6 +11,7 @@ from tests.scenarios.scenario_base import (
 )
 
 def setup_scenario():
+    """Set up the unmerged-branch-deletion scenario."""
     setup_repo()
 
     print("Creating initial commit on main...")
