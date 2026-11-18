@@ -46,7 +46,7 @@ Linux/ macOS: `. venv/bin/activate`
 
 ## Build Instructions
 To compile the application into a standalone executable using PyInstaller:  
-`pyinstaller --name git-recover --windowed --onefile run.py`
+`pyinstaller --name git-recover --windowed --noconsole --onefile --add-data "GitRecover/config.toml;GitRecover" --add-data "GitRecover/models/Qwen3-4B-Q4_K_M.gguf;GitRecover/models" --collect-all llama_cpp --collect-all qt_material run.py`
 
 ## Running the Program
 `python run.py` OR `python -m GitRecover.main`
